@@ -24,7 +24,31 @@ async function deleteUser(req, res) {
   }
 }
 
+async function updateUserRole(req, res) {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+
+    if (!role) {
+      return res.status(400).json({ error: 'Role is required' });
+    }
+
+    const updatedUser = await userService.updateUserRole(userId, role);
+    return res.json({ user: updatedUser });
+  } catch (err) {
+    console.error('Update user role error:', err);
+    if (err.message === 'User not found') {
+      return res.status(404).json({ error: err.message });
+    }
+    if (err.message.includes('Invalid')) {
+      return res.status(400).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 module.exports = {
   getAllUsers,
-  deleteUser
+  deleteUser,
+  updateUserRole
 };
