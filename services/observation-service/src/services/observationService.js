@@ -4,6 +4,8 @@ const {
   canSubmitObservation,
   canValidateObservation,
 } = require("../utils/validators");
+const reputationService = require("./reputationService");
+const { updateSpeciesRarity } = require("../utils/rarityCalculator");
 
 const createObservation = async (observationData, authorId) => {
   // Validation des données
@@ -92,6 +94,19 @@ const validateObservation = async (observationId, validatorId) => {
     },
   });
 
+  // Mise à jour de la réputation
+  // +3 pour l'auteur de l'observation
+  await reputationService.updateReputation(observation.authorId, 3);
+
+  // +1 si validé par un expert
+  const isExpert = await reputationService.isUserExpert(validatorId);
+  if (isExpert) {
+    await reputationService.updateReputation(observation.authorId, 1);
+  }
+
+  // Mise à jour du rarityScore de l'espèce
+  await updateSpeciesRarity(observation.speciesId);
+
   return validatedObservation;
 };
 
@@ -124,6 +139,9 @@ const rejectObservation = async (observationId, validatorId) => {
       species: true,
     },
   });
+
+  // Pénalité de réputation : -1 pour l'auteur
+  await reputationService.updateReputation(observation.authorId, -1);
 
   return rejectedObservation;
 };
