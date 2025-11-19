@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./config/swagger");
 require("dotenv").config();
 
 const speciesRoutes = require("./routes/speciesRoutes");
@@ -10,6 +12,9 @@ const app = express();
 // Middlewares
 app.use(cors());
 app.use(express.json());
+
+// Swagger documentation
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Routes
 app.use("/species", speciesRoutes);
