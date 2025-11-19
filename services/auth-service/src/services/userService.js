@@ -70,10 +70,46 @@ async function deleteUser(userId) {
     return true;
 }
 
+async function updateUserRole(userId, newRole) {
+    const id = parseInt(userId, 10);
+    if (isNaN(id)) {
+        throw new Error('Invalid user ID');
+    }
+
+    // Valider le rôle
+    const validRoles = ['USER', 'EXPERT', 'ADMIN'];
+    if (!validRoles.includes(newRole)) {
+        throw new Error('Invalid role. Must be USER, EXPERT, or ADMIN');
+    }
+
+    // Vérifier que l'utilisateur existe
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
+        throw new Error('User not found');
+    }
+
+    // Mettre à jour le rôle
+    const updatedUser = await prisma.user.update({
+        where: { id },
+        data: { role: newRole },
+        select: {
+            id: true,
+            email: true,
+            username: true,
+            role: true,
+            reputation: true,
+            createdAt: true
+        }
+    });
+
+    return updatedUser;
+}
+
 module.exports = {
     sanitize,
     createUser,
     findByIdentifier,
     getAllUsers,
-    deleteUser
+    deleteUser,
+    updateUserRole
 };
