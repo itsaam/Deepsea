@@ -25,7 +25,8 @@ createSpecies(req, res) {
   }
 
   getAllSpecies(req, res) {
-    speciesService.getAllSpecies()
+    const sortBy = req.query.sortBy; // ?sortBy=rarity
+    speciesService.getAllSpecies(sortBy)
       .then((speciesList) => {
         res.status(200).json(speciesList);
       })

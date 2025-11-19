@@ -39,16 +39,17 @@ const getSpeciesById = async (speciesId) => {
   return species;
 };
 
-const getAllSpecies = async () => {
+const getAllSpecies = async (sortBy = "createdAt") => {
+  const orderBy =
+    sortBy === "rarity" ? { rarityScore: "desc" } : { createdAt: "desc" };
+
   const species = await prisma.species.findMany({
     include: {
       _count: {
         select: { observations: true },
       },
     },
-    orderBy: {
-      createdAt: "desc",
-    },
+    orderBy,
   });
 
   return species;
