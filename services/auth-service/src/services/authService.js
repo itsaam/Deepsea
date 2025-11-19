@@ -8,7 +8,7 @@ async function register({email, username, password, role}) {
     }
 
     const existingEmail = await prisma.user.findUnique({
-        where: { email }
+        where: {email}
     });
 
     if (existingEmail) {
@@ -23,14 +23,8 @@ async function register({email, username, password, role}) {
             username,
             password: passwordHash,
             role: role === 'ADMIN' ? 'ADMIN' : role === 'EXPERT' ? 'EXPERT' : 'USER'
-        },
-        select: {
-            id: true,
-            email: true,
-            username: true,
-            role: true,
-            reputation: true,
-            createdAt: true
+        }, select: {
+            id: true, email: true, username: true, role: true, reputation: true, createdAt: true
         }
     });
 
@@ -46,19 +40,9 @@ async function login(identifier, password) {
 
     const user = await prisma.user.findFirst({
         where: {
-            OR: [
-                {email: identifier},
-                {username: identifier}
-            ]
-        },
-        select: {
-            id: true,
-            email: true,
-            username: true,
-            password: true,
-            role: true,
-            reputation: true,
-            createdAt: true
+            OR: [{email: identifier}, {username: identifier}]
+        }, select: {
+            id: true, email: true, username: true, password: true, role: true, reputation: true, createdAt: true
         }
     });
 
@@ -78,6 +62,20 @@ async function login(identifier, password) {
     return {user: userWithoutPassword, token};
 }
 
+async function getUserById(userId) {
+    const user = await prisma.user.findUnique({
+        where: {id: userId}, select: {
+            id: true, email: true, username: true, role: true, reputation: true, createdAt: true
+        }
+    });
+
+    if (!user) {
+        throw new Error('User not found');
+    }
+
+    return user;
+}
+
 async function verifyCredentials(identifier, password) {
     if (!identifier || !password) {
         throw new Error('identifier and password are required');
@@ -85,19 +83,9 @@ async function verifyCredentials(identifier, password) {
 
     const user = await prisma.user.findFirst({
         where: {
-            OR: [
-                {email: identifier},
-                {username: identifier}
-            ]
-        },
-        select: {
-            id: true,
-            email: true,
-            username: true,
-            password: true,
-            role: true,
-            reputation: true,
-            createdAt: true
+            OR: [{email: identifier}, {username: identifier}]
+        }, select: {
+            id: true, email: true, username: true, password: true, role: true, reputation: true, createdAt: true
         }
     });
 
@@ -116,14 +104,8 @@ async function verifyCredentials(identifier, password) {
 
 async function refreshToken(userId) {
     const user = await prisma.user.findUnique({
-        where: {id: userId},
-        select: {
-            id: true,
-            email: true,
-            username: true,
-            role: true,
-            reputation: true,
-            createdAt: true
+        where: {id: userId}, select: {
+            id: true, email: true, username: true, role: true, reputation: true, createdAt: true
         }
     });
 
@@ -136,8 +118,5 @@ async function refreshToken(userId) {
 }
 
 module.exports = {
-    register,
-    login,
-    verifyCredentials,
-    refreshToken
+    register, login, verifyCredentials, refreshToken, getUserById
 };
