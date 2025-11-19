@@ -4,12 +4,14 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Species {
   id            Int           @id @default(autoincrement())
   authorId      Int
   name          String        @unique
+  rarityScore   Float         @default(1.0) 
   createdAt     DateTime      @default(now())
   observations  Observation[]
 }
@@ -25,6 +27,14 @@ model Observation {
   createdAt     DateTime  @default(now())
   
   species       Species   @relation(fields: [speciesId], references: [id])
+}
+
+model UserReputation { 
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique
+  score      Int      @default(0)
+  isExpert   Boolean  @default(false)
+  updatedAt  DateTime @updatedAt
 }
 
 enum Status {
