@@ -1,6 +1,6 @@
 createSpecies(req, res) {
     const speciesData = req.body;
-    speciesService.createSpecies(speciesData)
+    speciesService.createSpecies(speciesData, req.user.id)
       .then((newSpecies) => {
         res.status(201).json(newSpecies);
       })

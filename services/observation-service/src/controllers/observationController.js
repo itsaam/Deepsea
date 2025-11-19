@@ -3,7 +3,7 @@ createObservation(req, res) {
         async () => {
             try {
                 const observationData = req.body
-                const newObservation = await observationService.createObservation(observationData)
+                const newObservation = await observationService.createObservation(observationData, req.user.id)
                 res.status(201).json(newObservation)
             } catch (error) {
                 res.status(500).json({ error: "Erreur lors de la création de l'observation", details: error.message })
