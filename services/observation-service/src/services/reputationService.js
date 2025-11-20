@@ -1,4 +1,33 @@
 const prisma = require("../config/database");
+const axios = require("axios");
+
+const AUTH_SERVICE_URL =
+  process.env.AUTH_SERVICE_URL || "http://localhost:3001";
+
+/**
+ * Appelle auth-service pour promouvoir un utilisateur en EXPERT
+ */
+async function promoteUserToExpert(userId) {
+  try {
+    const response = await axios.post(
+      `${AUTH_SERVICE_URL}/internal/promote-expert`,
+      { userId },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log(`✅ User ${userId} promoted to EXPERT in auth-service`);
+    return response.data;
+  } catch (error) {
+    console.error(
+      `❌ Failed to promote user ${userId} to EXPERT:`,
+      error.response?.data || error.message
+    );
+    // On ne throw pas l'erreur pour ne pas bloquer le flow de réputation
+  }
+}
 
 /**
  * Met à jour la réputation d'un utilisateur
@@ -21,6 +50,9 @@ async function updateReputation(userId, points) {
       where: { userId },
       data: { isExpert: true },
     });
+
+    // Appeler auth-service pour synchroniser le rôle
+    await promoteUserToExpert(userId);
   }
 
   return reputation;

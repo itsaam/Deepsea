@@ -70,12 +70,20 @@ export default function Navbar() {
             🔬 Taxonomie
           </Link>
           {user?.role === "ADMIN" && (
-            <Link
-              to="/admin"
-              className="text-gray-700 hover:text-blue-500 font-semibold transition-colors"
-            >
-              ⚙️ Admin
-            </Link>
+            <>
+              <Link
+                to="/admin"
+                className="text-gray-700 hover:text-blue-500 font-semibold transition-colors"
+              >
+                ⚙️ Admin
+              </Link>
+              <Link
+                to="/casino"
+                className="text-gray-700 hover:text-red-500 font-semibold transition-colors"
+              >
+                🎰 Casino
+              </Link>
+            </>
           )}
 
           {reputation && (
