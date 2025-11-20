@@ -81,6 +81,12 @@ const validateObservation = async (observationId, validatorId) => {
     throw new Error("Cette observation a déjà été traitée");
   }
 
+  // Vérifier si le validateur est expert
+  const validatorReputation = await reputationService.getUserReputation(
+    validatorId
+  );
+  const isExpertValidator = validatorReputation?.isExpert || false;
+
   // Mise à jour de l'observation
   const validatedObservation = await prisma.observation.update({
     where: { id: parseInt(observationId) },
@@ -95,14 +101,12 @@ const validateObservation = async (observationId, validatorId) => {
   });
 
   // Mise à jour de la réputation
-  // +3 pour l'auteur de l'observation
-  await reputationService.updateReputation(observation.authorId, 3);
-
-  // +1 si validé par un expert
-  const isExpert = await reputationService.isUserExpert(validatorId);
-  if (isExpert) {
-    await reputationService.updateReputation(observation.authorId, 1);
-  }
+  // +3 pour l'auteur + +1 bonus si validé par expert
+  const bonusPoints = isExpertValidator ? 1 : 0;
+  await reputationService.updateReputation(
+    observation.authorId,
+    3 + bonusPoints
+  );
 
   // Mise à jour du rarityScore de l'espèce
   await updateSpeciesRarity(observation.speciesId);
