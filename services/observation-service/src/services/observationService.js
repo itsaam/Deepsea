@@ -150,9 +150,84 @@ const rejectObservation = async (observationId, validatorId) => {
   return rejectedObservation;
 };
 
+const getAllObservations = async (includeDeleted = false) => {
+  const whereClause = includeDeleted ? {} : { deleted: false };
+
+  const observations = await prisma.observation.findMany({
+    where: whereClause,
+    include: {
+      species: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return observations;
+};
+
+const softDeleteObservation = async (observationId, userId) => {
+  const observation = await prisma.observation.findUnique({
+    where: { id: observationId },
+  });
+
+  if (!observation) {
+    throw new Error("Observation non trouvée");
+  }
+
+  if (observation.deleted) {
+    throw new Error("Cette observation est déjà supprimée");
+  }
+
+  const deletedObservation = await prisma.observation.update({
+    where: { id: observationId },
+    data: {
+      deleted: true,
+      deletedBy: userId,
+      deletedAt: new Date(),
+    },
+    include: {
+      species: true,
+    },
+  });
+
+  return deletedObservation;
+};
+
+const restoreObservation = async (observationId) => {
+  const observation = await prisma.observation.findUnique({
+    where: { id: observationId },
+  });
+
+  if (!observation) {
+    throw new Error("Observation non trouvée");
+  }
+
+  if (!observation.deleted) {
+    throw new Error("Cette observation n'est pas supprimée");
+  }
+
+  const restoredObservation = await prisma.observation.update({
+    where: { id: observationId },
+    data: {
+      deleted: false,
+      deletedBy: null,
+      deletedAt: null,
+    },
+    include: {
+      species: true,
+    },
+  });
+
+  return restoredObservation;
+};
+
 module.exports = {
   createObservation,
   getObservationsBySpecies,
   validateObservation,
   rejectObservation,
+  getAllObservations,
+  softDeleteObservation,
+  restoreObservation,
 };

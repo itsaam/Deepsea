@@ -158,4 +158,95 @@ router.post("/:id/reject", authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /observations:
+ *   get:
+ *     summary: Récupérer toutes les observations
+ *     tags: [Observations]
+ *     parameters:
+ *       - in: query
+ *         name: includeDeleted
+ *         schema:
+ *           type: boolean
+ *         description: Inclure les observations supprimées
+ *     responses:
+ *       200:
+ *         description: Liste des observations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Observation'
+ */
+router.get("/", async (req, res) => {
+  try {
+    const includeDeleted = req.query.includeDeleted === "true";
+    const observations = await observationService.getAllObservations(includeDeleted);
+    res.status(200).json(observations);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /observations/{id}/soft-delete:
+ *   patch:
+ *     summary: Suppression logique d'une observation
+ *     tags: [Observations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Observation supprimée logiquement
+ */
+router.patch("/:id/soft-delete", authMiddleware, async (req, res) => {
+  try {
+    const deletedObservation = await observationService.softDeleteObservation(
+      parseInt(req.params.id, 10),
+      req.user.id
+    );
+    res.status(200).json(deletedObservation);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /observations/{id}/restore:
+ *   patch:
+ *     summary: Restaurer une observation supprimée
+ *     tags: [Observations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Observation restaurée
+ */
+router.patch("/:id/restore", authMiddleware, async (req, res) => {
+  try {
+    const restoredObservation = await observationService.restoreObservation(
+      parseInt(req.params.id, 10)
+    );
+    res.status(200).json(restoredObservation);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 module.exports = router;

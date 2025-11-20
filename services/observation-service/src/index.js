@@ -25,6 +25,11 @@ app.get("/", (req, res) => {
   res.json({ message: "Observation Service API" });
 });
 
+// Health check
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", service: "observation-service", port: PORT });
+});
+
 const PORT = process.env.PORT || 3002;
 
 app.listen(PORT, () => {

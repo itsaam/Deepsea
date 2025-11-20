@@ -5,7 +5,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
 
 function signToken(user) {
   const payload = {
-    sub: user.id,
+    id: user.id,
     email: user.email,
     username: user.username,
     role: user.role

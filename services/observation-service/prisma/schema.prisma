@@ -24,6 +24,9 @@ model Observation {
   status        Status    @default(PENDING)
   validatedBy   Int?
   validatedAt   DateTime?
+  deleted       Boolean   @default(false)
+  deletedBy     Int?
+  deletedAt     DateTime?
   createdAt     DateTime  @default(now())
   
   species       Species   @relation(fields: [speciesId], references: [id])
