@@ -10,6 +10,7 @@ import CreateSpecies from "./pages/CreateSpecies";
 import ObservationsList from "./pages/ObservationsList";
 import AdminPanel from "./pages/AdminPanel";
 import Statistics from "./pages/Statistics";
+import Taxonomy from "./pages/Taxonomy";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -71,6 +72,15 @@ function App() {
         element={
           <ProtectedRoute>
             <Statistics />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/taxonomy"
+        element={
+          <ProtectedRoute>
+            <Taxonomy />
           </ProtectedRoute>
         }
       />

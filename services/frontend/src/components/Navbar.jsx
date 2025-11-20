@@ -43,14 +43,17 @@ export default function Navbar() {
             Observations
           </Link>
           <Link to="/species/create" className="hover:underline">
-            Créer
+            + Créer
           </Link>
           <Link to="/statistics" className="hover:underline">
-            Statistiques
+            📊 Statistiques
+          </Link>
+          <Link to="/taxonomy" className="hover:underline">
+            🔬 Taxonomie
           </Link>
           {user?.role === "ADMIN" && (
             <Link to="/admin" className="hover:underline">
-              Admin
+              👤 Admin
             </Link>
           )}
 
