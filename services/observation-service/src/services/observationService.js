@@ -202,22 +202,6 @@ const restoreObservation = async (observationId) => {
   return restoredObservation;
 };
 
-const getAllObservations = async (includeDeleted = false) => {
-  const whereClause = includeDeleted ? {} : { deleted: false };
-
-  const observations = await prisma.observation.findMany({
-    where: whereClause,
-    include: {
-      species: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  return observations;
-};
-
 module.exports = {
   createObservation,
   getAllObservations,
@@ -226,5 +210,4 @@ module.exports = {
   rejectObservation,
   softDeleteObservation,
   restoreObservation,
-  getAllObservations,
 };
