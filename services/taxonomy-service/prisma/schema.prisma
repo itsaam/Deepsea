@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Audit {
+  id            Int      @id @default(autoincrement())
+  type          String   // DELETE, RESTORE, VALIDATE, REJECT
+  observationId Int?
+  speciesId     Int?
+  userId        Int?
+  details       String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([speciesId])
+  @@index([observationId])
+}
+
