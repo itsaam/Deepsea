@@ -25,6 +25,12 @@ addAuthInterceptor(observationAPI);
 // AUTH SERVICE
 export const register = (data) => authAPI.post("/auth/register", data);
 export const login = (data) => authAPI.post("/auth/login", data);
+export const verify2FA = (userId, code) =>
+  authAPI.post("/auth/verify-2fa", { userId, code });
+export const forgotPassword = (email) =>
+  authAPI.post("/auth/forgot-password", { email });
+export const resetPassword = (token, newPassword) =>
+  authAPI.post("/auth/reset-password", { token, newPassword });
 export const getMe = () => authAPI.get("/auth/me");
 
 // SPECIES
