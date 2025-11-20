@@ -1,122 +1,306 @@
-const prisma = require('../../prismaClient');
-const {hashPassword, comparePassword} = require('../utils/hashUtils');
-const {signToken} = require('../config/jwt');
+const prisma = require("../../prismaClient");
+const { hashPassword, comparePassword } = require("../utils/hashUtils");
+const { signToken } = require("../config/jwt");
 
-async function register({email, username, password, role}) {
-    if (!email || !username || !password) {
-        throw new Error('email, username and password are required');
-    }
+async function register({ email, username, password, role }) {
+  if (!email || !username || !password) {
+    throw new Error("email, username and password are required");
+  }
 
-    const existingEmail = await prisma.user.findUnique({
-        where: {email}
-    });
+  const existingEmail = await prisma.user.findUnique({
+    where: { email },
+  });
 
-    if (existingEmail) {
-        throw new Error('Email already in use');
-    }
+  if (existingEmail) {
+    throw new Error("Email already in use");
+  }
 
-    const passwordHash = await hashPassword(password);
+  const passwordHash = await hashPassword(password);
 
-    const user = await prisma.user.create({
-        data: {
-            email,
-            username,
-            password: passwordHash,
-            role: role === 'ADMIN' ? 'ADMIN' : role === 'EXPERT' ? 'EXPERT' : 'USER'
-        }, select: {
-            id: true, email: true, username: true, role: true, reputation: true, createdAt: true
-        }
-    });
+  const user = await prisma.user.create({
+    data: {
+      email,
+      username,
+      password: passwordHash,
+      role: role === "ADMIN" ? "ADMIN" : role === "EXPERT" ? "EXPERT" : "USER",
+    },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      role: true,
+      reputation: true,
+      createdAt: true,
+    },
+  });
 
-    const token = signToken(user);
+  const token = signToken(user);
 
-    return {user, token};
+  return { user, token };
 }
 
 async function login(identifier, password) {
-    if (!identifier || !password) {
-        throw new Error('identifier and password are required');
-    }
+  if (!identifier || !password) {
+    throw new Error("identifier and password are required");
+  }
 
-    const user = await prisma.user.findFirst({
-        where: {
-            OR: [{email: identifier}, {username: identifier}]
-        }, select: {
-            id: true, email: true, username: true, password: true, role: true, reputation: true, createdAt: true
-        }
-    });
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [{ email: identifier }, { username: identifier }],
+    },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      password: true,
+      role: true,
+      reputation: true,
+      createdAt: true,
+    },
+  });
 
-    if (!user) {
-        throw new Error('Invalid identifier or password');
-    }
+  if (!user) {
+    throw new Error("Invalid identifier or password");
+  }
 
-    const isPasswordValid = await comparePassword(password, user.password);
-    if (!isPasswordValid) {
-        throw new Error('Invalid identifier or password');
-    }
+  const isPasswordValid = await comparePassword(password, user.password);
+  if (!isPasswordValid) {
+    throw new Error("Invalid identifier or password");
+  }
 
-    const {password: _, ...userWithoutPassword} = user;
+  // Générer et envoyer le code A2F
+  const {
+    generateTwoFactorCode,
+    sendTwoFactorEmail,
+  } = require("./emailService");
+  const code = generateTwoFactorCode();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    const token = signToken(userWithoutPassword);
+  // Stocker le code dans la DB
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      twoFactorCode: code,
+      twoFactorExpires: expiresAt,
+    },
+  });
 
-    return {user: userWithoutPassword, token};
+  // Envoyer l'email
+  const emailResult = await sendTwoFactorEmail(user.email, code);
+  if (!emailResult.success) {
+    throw new Error("Failed to send verification email");
+  }
+
+  return {
+    message: "Code de vérification envoyé à votre email",
+    userId: user.id,
+    requiresTwoFactor: true,
+  };
 }
 
 async function getUserById(userId) {
-    const user = await prisma.user.findUnique({
-        where: {id: userId}, select: {
-            id: true, email: true, username: true, role: true, reputation: true, createdAt: true
-        }
-    });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      role: true,
+      reputation: true,
+      createdAt: true,
+    },
+  });
 
-    if (!user) {
-        throw new Error('User not found');
-    }
+  if (!user) {
+    throw new Error("User not found");
+  }
 
-    return user;
+  return user;
+}
+
+async function verify2FA(userId, code) {
+  if (!userId || !code) {
+    throw new Error("userId and code are required");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: parseInt(userId) },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      role: true,
+      reputation: true,
+      twoFactorCode: true,
+      twoFactorExpires: true,
+      createdAt: true,
+    },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (!user.twoFactorCode || !user.twoFactorExpires) {
+    throw new Error("No verification code found");
+  }
+
+  if (new Date() > user.twoFactorExpires) {
+    throw new Error("Code expired");
+  }
+
+  if (user.twoFactorCode !== code) {
+    throw new Error("Invalid code");
+  }
+
+  // Code valide - effacer le code et générer le token
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      twoFactorCode: null,
+      twoFactorExpires: null,
+    },
+  });
+
+  const {
+    twoFactorCode: _,
+    twoFactorExpires: __,
+    ...userWithoutSensitive
+  } = user;
+  const token = signToken(userWithoutSensitive);
+
+  return { user: userWithoutSensitive, token };
 }
 
 async function verifyCredentials(identifier, password) {
-    if (!identifier || !password) {
-        throw new Error('identifier and password are required');
-    }
+  if (!identifier || !password) {
+    throw new Error("identifier and password are required");
+  }
 
-    const user = await prisma.user.findFirst({
-        where: {
-            OR: [{email: identifier}, {username: identifier}]
-        }, select: {
-            id: true, email: true, username: true, password: true, role: true, reputation: true, createdAt: true
-        }
-    });
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [{ email: identifier }, { username: identifier }],
+    },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      password: true,
+      role: true,
+      reputation: true,
+      createdAt: true,
+    },
+  });
 
-    if (!user) {
-        throw new Error('Invalid credentials');
-    }
+  if (!user) {
+    throw new Error("Invalid credentials");
+  }
 
-    const isPasswordValid = await comparePassword(password, user.password);
-    if (!isPasswordValid) {
-        throw new Error('Invalid credentials');
-    }
+  const isPasswordValid = await comparePassword(password, user.password);
+  if (!isPasswordValid) {
+    throw new Error("Invalid credentials");
+  }
 
-    const {password: _, ...userWithoutPassword} = user;
-    return userWithoutPassword;
+  const { password: _, ...userWithoutPassword } = user;
+  return userWithoutPassword;
 }
 
 async function refreshToken(userId) {
-    const user = await prisma.user.findUnique({
-        where: {id: userId}, select: {
-            id: true, email: true, username: true, role: true, reputation: true, createdAt: true
-        }
-    });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      role: true,
+      reputation: true,
+      createdAt: true,
+    },
+  });
 
-    if (!user) {
-        throw new Error('User not found');
-    }
+  if (!user) {
+    throw new Error("User not found");
+  }
 
-    const token = signToken(user);
-    return {user, token};
+  const token = signToken(user);
+  return { user, token };
+}
+
+async function forgotPassword(email) {
+  if (!email) {
+    throw new Error("Email is required");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    throw new Error("No account found with this email");
+  }
+
+  const {
+    generateResetToken,
+    sendResetPasswordEmail,
+  } = require("./emailService");
+  const resetToken = generateResetToken();
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 heure
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      resetPasswordToken: resetToken,
+      resetPasswordExpires: expiresAt,
+    },
+  });
+
+  const emailResult = await sendResetPasswordEmail(user.email, resetToken);
+  if (!emailResult.success) {
+    throw new Error("Failed to send reset email");
+  }
+
+  return { message: "Email de réinitialisation envoyé" };
+}
+
+async function resetPassword(token, newPassword) {
+  if (!token || !newPassword) {
+    throw new Error("Token and new password are required");
+  }
+
+  const user = await prisma.user.findFirst({
+    where: {
+      resetPasswordToken: token,
+      resetPasswordExpires: {
+        gt: new Date(),
+      },
+    },
+  });
+
+  if (!user) {
+    throw new Error("Token invalide ou expiré");
+  }
+
+  const passwordHash = await hashPassword(newPassword);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      password: passwordHash,
+      resetPasswordToken: null,
+      resetPasswordExpires: null,
+    },
+  });
+
+  return { message: "Mot de passe réinitialisé avec succès" };
 }
 
 module.exports = {
-    register, login, verifyCredentials, refreshToken, getUserById
+  register,
+  login,
+  verify2FA,
+  verifyCredentials,
+  refreshToken,
+  getUserById,
+  forgotPassword,
+  resetPassword,
 };

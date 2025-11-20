@@ -82,6 +82,45 @@ router.post("/login", authController.login);
 
 /**
  * @swagger
+ * /auth/verify-2fa:
+ *   post:
+ *     summary: Vérifier le code A2F et obtenir le token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - code
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 description: ID de l'utilisateur
+ *               code:
+ *                 type: string
+ *                 description: Code à 6 chiffres reçu par email
+ *     responses:
+ *       200:
+ *         description: Code valide, connexion réussie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Code invalide ou expiré
+ */
+router.post("/verify-2fa", authController.verify2FA);
+
+/**
+ * @swagger
  * /auth/me:
  *   get:
  *     summary: Récupérer les informations de l'utilisateur connecté
@@ -143,5 +182,59 @@ router.post("/refresh", authMiddleware, authController.refreshToken);
  *         description: Mot de passe incorrect
  */
 router.post("/verify", authController.verifyPassword);
+
+/**
+ * @swagger
+ * /auth/forgot-password:
+ *   post:
+ *     summary: Demander un lien de réinitialisation de mot de passe
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Email de réinitialisation envoyé
+ *       400:
+ *         description: Email invalide
+ */
+router.post("/forgot-password", authController.forgotPassword);
+
+/**
+ * @swagger
+ * /auth/reset-password:
+ *   post:
+ *     summary: Réinitialiser le mot de passe avec le token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - newPassword
+ *             properties:
+ *               token:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Mot de passe réinitialisé
+ *       400:
+ *         description: Token invalide ou expiré
+ */
+router.post("/reset-password", authController.resetPassword);
 
 module.exports = router;
