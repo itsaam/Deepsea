@@ -182,7 +182,7 @@ router.post("/:id/reject", authMiddleware, async (req, res) => {
  */
 router.get("/", async (req, res) => {
   try {
-    const includeDeleted = req.query.includeDeleted === "true";
+    const includeDeleted = req.query.includeDeleted === 'true';
     const observations = await observationService.getAllObservations(includeDeleted);
     res.status(200).json(observations);
   } catch (error) {
@@ -194,7 +194,7 @@ router.get("/", async (req, res) => {
  * @swagger
  * /observations/{id}/soft-delete:
  *   patch:
- *     summary: Suppression logique d'une observation
+ *     summary: Suppression logique d'une observation (EXPERT/ADMIN)
  *     tags: [Observations]
  *     security:
  *       - bearerAuth: []
@@ -207,6 +207,8 @@ router.get("/", async (req, res) => {
  *     responses:
  *       200:
  *         description: Observation supprimée logiquement
+ *       401:
+ *         description: Non authentifié
  */
 router.patch("/:id/soft-delete", authMiddleware, async (req, res) => {
   try {
@@ -224,7 +226,7 @@ router.patch("/:id/soft-delete", authMiddleware, async (req, res) => {
  * @swagger
  * /observations/{id}/restore:
  *   patch:
- *     summary: Restaurer une observation supprimée
+ *     summary: Restaurer une observation supprimée (ADMIN uniquement)
  *     tags: [Observations]
  *     security:
  *       - bearerAuth: []
@@ -237,6 +239,8 @@ router.patch("/:id/soft-delete", authMiddleware, async (req, res) => {
  *     responses:
  *       200:
  *         description: Observation restaurée
+ *       401:
+ *         description: Non authentifié
  */
 router.patch("/:id/restore", authMiddleware, async (req, res) => {
   try {
