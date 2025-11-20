@@ -44,6 +44,22 @@ const createObservation = async (observationData, authorId) => {
   return newObservation;
 };
 
+const getAllObservations = async (status) => {
+  const where = status ? { status } : {};
+
+  const observations = await prisma.observation.findMany({
+    where,
+    include: {
+      species: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return observations;
+};
+
 const getObservationsBySpecies = async (speciesId) => {
   const observations = await prisma.observation.findMany({
     where: {
@@ -204,6 +220,7 @@ const getAllObservations = async (includeDeleted = false) => {
 
 module.exports = {
   createObservation,
+  getAllObservations,
   getObservationsBySpecies,
   validateObservation,
   rejectObservation,
