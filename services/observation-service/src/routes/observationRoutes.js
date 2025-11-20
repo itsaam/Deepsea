@@ -6,6 +6,46 @@ const observationService = require("../services/observationService");
 /**
  * @swagger
  * /observations:
+ *   get:
+ *     summary: Récupérer toutes les observations
+ *     tags: [Observations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [PENDING, VALIDATED, REJECTED]
+ *         description: Filtrer par statut
+ *     responses:
+ *       200:
+ *         description: Liste des observations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Observation'
+ *       401:
+ *         description: Non authentifié
+ */
+router.get("/", authMiddleware, async (req, res) => {
+  try {
+    const { status } = req.query;
+    const observations = await observationService.getAllObservations(status);
+    res.status(200).json(observations);
+  } catch (error) {
+    res.status(500).json({
+      error: "Erreur lors de la récupération des observations",
+      details: error.message,
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /observations:
  *   post:
  *     summary: Créer une nouvelle observation
  *     tags: [Observations]
