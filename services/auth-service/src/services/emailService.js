@@ -54,8 +54,9 @@ const sendResetPasswordEmail = async (email, resetToken) => {
     to: email,
     subject: "Réinitialisation de mot de passe - DeepSea Archives",
     html: `
-      <div style="font-family: Arial, sans-serif; padding: 20px;">
+      <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center;">
         <h2>🌊 DeepSea Archives</h2>
+        <img src="https://i.pinimg.com/736x/0f/dd/22/0fdd224bb2cee743b1d0ef20cc285ec9.jpg" alt="Oublié ton mot de passe ?" style="width: 200px; height: 200px; margin: 20px auto; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
         <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
         <p>Cliquez sur le lien ci-dessous pour réinitialiser votre mot de passe :</p>
         <a href="${resetUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 20px 0;">
