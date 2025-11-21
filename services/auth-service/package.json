@@ -13,8 +13,12 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "coveragePathIgnorePatterns": ["/node_modules/"],
-    "testMatch": ["**/tests/**/*.test.js"]
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
   },
   "keywords": [],
   "author": "",
@@ -34,6 +38,6 @@
     "jest": "^29.7.0",
     "nodemon": "^3.0.2",
     "prisma": "^5.7.0",
-    "supertest": "^6.3.3"
+    "supertest": "^6.3.4"
   }
 }

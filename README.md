@@ -1,13 +1,28 @@
-DeepSea Archives – Sujet de Projet Backend
-DeepSea Archives est une plateforme où les utilisateurs répertorient des créatures abyssales imaginaires et soumettent des observations les concernant, tandis que des experts valident ou rejettent ces données.
-Les espèces évoluent en fonction des observations collectées, simulant un écosystème sous-marin fictif.
+# 🌊 DeepSea Archives – Plateforme d'Observation Marine
 
-Stack Technique
-• Express.js
-• Prisma ou Mongoose + Base de données
-• JWT + rôles
-• Microservices (2 obligatoires, d’autres possibles en bonus)
-• Pas de front-end (utilisation de Postman et Swagger)
+DeepSea Archives est une plateforme où les utilisateurs répertorient des créatures marines et soumettent des observations les concernant, tandis que des experts valident ou rejettent ces données.
+Les espèces évoluent en fonction des observations collectées, avec un système de réputation et de classification taxonomique complète.
+
+## 🚀 Stack Technique
+
+- **Backend**: Express.js + Node.js 18+
+- **Bases de données**: MySQL (Auth) + PostgreSQL (Observation/Taxonomy)
+- **ORM**: Prisma
+- **Authentification**: JWT + 2FA par email
+- **Architecture**: Microservices (4 services) + API Gateway
+- **Frontend**: React 18 + Vite + Tailwind CSS
+- **Documentation**: Swagger/OpenAPI sur tous les services
+- **Tests**: Jest + Supertest
+- **CI/CD**: GitHub Actions
+- **Containerisation**: Docker + Docker Compose
+
+## 📋 Documentation
+
+- [🏗️ Architecture complète](./docs/ARCHITECTURE.md)
+- [🗄️ Schémas des bases de données (ERD)](./docs/DATABASE_SCHEMA.md)
+- [🚪 Guide API Gateway](./docs/API_GATEWAY_GUIDE.md)
+
+---
 
 Par groupe de 2 (ou individuel, mais travail dense).
 Le rendu sera un fichier .txt avec un lien GitHub/GitLab, avec un readme détaillé décrivant le travail effectué.

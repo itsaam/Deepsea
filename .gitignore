@@ -2,4 +2,6 @@ node_modules/
 package-lock.json
 .env
 .idea
+.pids
 services/observation-service/seed-species.js
+test-api-gateway.sh
