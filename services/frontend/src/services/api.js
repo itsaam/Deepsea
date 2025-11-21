@@ -8,6 +8,10 @@ const observationAPI = axios.create({
   baseURL: "http://localhost:3002",
 });
 
+const taxonomyAPI = axios.create({
+  baseURL: "http://localhost:5002",
+});
+
 // Intercepteur pour ajouter le token automatiquement
 const addAuthInterceptor = (api) => {
   api.interceptors.request.use((config) => {
@@ -21,6 +25,7 @@ const addAuthInterceptor = (api) => {
 
 addAuthInterceptor(authAPI);
 addAuthInterceptor(observationAPI);
+addAuthInterceptor(taxonomyAPI);
 
 // AUTH SERVICE
 export const register = (data) => authAPI.post("/auth/register", data);
@@ -53,6 +58,9 @@ export const rejectObservation = (id) =>
 // REPUTATION
 export const getUserReputation = (userId) =>
   observationAPI.get(`/reputation/${userId}`);
+
+// TAXONOMY
+export const getTaxonomyStats = () => taxonomyAPI.get("/taxonomy/stats");
 
 // ADMIN
 export const getAllUsers = () => authAPI.get("/admin/users");

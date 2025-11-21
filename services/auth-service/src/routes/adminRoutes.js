@@ -89,4 +89,69 @@ router.delete("/users/:userId", adminController.deleteUser);
  */
 router.patch("/users/:userId/role", adminController.updateUserRole);
 
+/**
+ * @swagger
+ * /admin/promote-expert:
+ *   post:
+ *     summary: Promouvoir un utilisateur en EXPERT (route interne)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Utilisateur promu en EXPERT
+ *       403:
+ *         description: Accès refusé
+ */
+router.post("/promote-expert", adminController.promoteToExpert);
+
+/**
+ * @swagger
+ * /admin/casino/roulette:
+ *   post:
+ *     summary: Jouer à la roulette (ADMIN seulement) 🎰
+ *     tags: [Admin Casino]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - bets
+ *             properties:
+ *               bets:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [straight, red, black, even, odd, low, high, dozen1, dozen2, dozen3]
+ *                     amount:
+ *                       type: number
+ *                     value:
+ *                       type: number
+ *                       description: Requis seulement pour les paris "straight"
+ *     responses:
+ *       200:
+ *         description: Résultat de la roulette
+ *       403:
+ *         description: Accès refusé
+ */
+router.post("/casino/roulette", adminController.playRoulette);
+
 module.exports = router;

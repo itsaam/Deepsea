@@ -1,14 +1,14 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
-const JWT_SECRET = process.env.JWT_SECRET || 'DEV_SECRET_CHANGE_ME';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
+const JWT_SECRET = process.env.JWT_SECRET || "DEV_SECRET_CHANGE_ME";
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "24h";
 
 function signToken(user) {
   const payload = {
     id: user.id,
     email: user.email,
     username: user.username,
-    role: user.role
+    role: user.role,
   };
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
@@ -21,5 +21,5 @@ module.exports = {
   JWT_SECRET,
   JWT_EXPIRES_IN,
   signToken,
-  verifyToken
+  verifyToken,
 };

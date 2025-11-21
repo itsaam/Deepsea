@@ -10,6 +10,8 @@ import CreateSpecies from "./pages/CreateSpecies";
 import ObservationsList from "./pages/ObservationsList";
 import AdminPanel from "./pages/AdminPanel";
 import Statistics from "./pages/Statistics";
+import Taxonomy from "./pages/Taxonomy";
+import Casino from "./pages/Casino";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -67,6 +69,15 @@ function App() {
       />
 
       <Route
+        path="/casino"
+        element={
+          <ProtectedRoute>
+            <Casino />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/statistics"
         element={
           <ProtectedRoute>
@@ -75,7 +86,16 @@ function App() {
         }
       />
 
-      <Route path="/" element={<Navigate to="/species" replace />} />
+      <Route
+        path="/taxonomy"
+        element={
+          <ProtectedRoute>
+            <Taxonomy />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="/" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

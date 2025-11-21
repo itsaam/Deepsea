@@ -1,18 +1,30 @@
 version: "3.8"
 
 services:
+  # Base de données MySQL pour auth-service
   mysql:
     image: mysql:8.0
+    container_name: deepsea-mysql
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: password123
-      MYSQL_DATABASE: auth_db
+      MYSQL_DATABASE: deepsea
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - deepsea-network
 
+  # Base de données PostgreSQL pour observation-service et taxonomy-service
   postgres:
-    image: postgres
+    image: postgres:15-alpine
+    container_name: deepsea-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: saam
       POSTGRES_PASSWORD: password123
@@ -21,27 +33,96 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U saam"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - deepsea-network
 
+  # Service d'authentification
   auth-service:
     build: ./services/auth-service
+    container_name: deepsea-auth
+    restart: unless-stopped
     ports:
       - "3001:3001"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     environment:
-      DATABASE_URL: mysql://root:password123@mysql:3306/auth_db
-      JWT_SECRET: your_jwt_secret_here
+      DATABASE_URL: mysql://root:password123@mysql:3306/deepsea
+      JWT_SECRET: "your-super-secret-jwt-key-change-me-in-production"
+      JWT_EXPIRES_IN: "24h"
       PORT: 3001
+      NODE_ENV: production
+    networks:
+      - deepsea-network
 
+  # Service de gestion des observations et espèces
   observation-service:
     build: ./services/observation-service
+    container_name: deepsea-observation
+    restart: unless-stopped
     ports:
       - "3002:3002"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://saam:password123@postgres:5432/madb
+      DATABASE_URL: postgresql://saam:password123@postgres:5432/madb?schema=public
+      JWT_SECRET: "your-super-secret-jwt-key-change-me-in-production"
       PORT: 3002
+      NODE_ENV: production
+    networks:
+      - deepsea-network
+
+  # Service de taxonomie et modération avancée
+  taxonomy-service:
+    build: ./services/taxonomy-service
+    container_name: deepsea-taxonomy
+    restart: unless-stopped
+    ports:
+      - "5002:5002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      observation-service:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://saam:password123@postgres:5432/madb?schema=public
+      JWT_SECRET: "your-super-secret-jwt-key-change-me-in-production"
+      OBSERVATION_SERVICE_URL: http://observation-service:3002
+      PORT: 5002
+      NODE_ENV: production
+    networks:
+      - deepsea-network
+
+  # API Gateway - Point d'entrée unique
+  api-gateway:
+    build: ./services/api-gateway
+    container_name: deepsea-gateway
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    depends_on:
+      - auth-service
+      - observation-service
+      - taxonomy-service
+    environment:
+      JWT_SECRET: "your-super-secret-jwt-key-change-me-in-production"
+      AUTH_SERVICE_URL: http://auth-service:3001
+      OBSERVATION_SERVICE_URL: http://observation-service:3002
+      TAXONOMY_SERVICE_URL: http://taxonomy-service:5002
+      PORT: 4000
+      NODE_ENV: production
+    networks:
+      - deepsea-network
+
+networks:
+  deepsea-network:
+    driver: bridge
 
 volumes:
   mysql-data:

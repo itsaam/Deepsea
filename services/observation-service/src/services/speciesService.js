@@ -3,6 +3,7 @@ const {
   validateSpeciesData,
   isSpeciesNameUnique,
 } = require("../utils/validators");
+const { getAsciiArtByName } = require("../utils/asciiArt");
 
 const createSpecies = async (speciesData, authorId) => {
   // Validation des données
@@ -25,7 +26,13 @@ const createSpecies = async (speciesData, authorId) => {
     },
   });
 
-  return newSpecies;
+  // Ajouter l'ASCII art
+  const asciiArt = getAsciiArtByName(speciesData.name);
+  return {
+    ...newSpecies,
+    asciiArt: asciiArt.art,
+    asciiName: asciiArt.name,
+  };
 };
 
 const getSpeciesById = async (speciesId) => {
