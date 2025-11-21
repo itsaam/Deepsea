@@ -5,12 +5,12 @@ async function authMiddleware(req, res, next) {
   const authHeader = req.headers["authorization"];
 
   if (!authHeader) {
-    return res.status(401).json({ error: "Missing Authorization header" });
+    return res.status(401).json({ error: "En-tête Authorization manquant" });
   }
 
   const [type, token] = authHeader.split(" ");
   if (type !== "Bearer" || !token) {
-    return res.status(401).json({ error: "Invalid Authorization format" });
+    return res.status(401).json({ error: "Format Authorization invalide" });
   }
 
   try {
@@ -26,13 +26,13 @@ async function authMiddleware(req, res, next) {
       },
     });
     if (!user) {
-      return res.status(401).json({ error: "User not found" });
+      return res.status(401).json({ error: "Utilisateur introuvable" });
     }
     req.user = user;
     next();
   } catch (err) {
-    console.error("JWT error:", err);
-    return res.status(401).json({ error: "Invalid or expired token" });
+    console.error("Erreur JWT:", err);
+    return res.status(401).json({ error: "Token invalide ou expiré" });
   }
 }
 

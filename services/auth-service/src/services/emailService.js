@@ -1,11 +1,10 @@
 const nodemailer = require("nodemailer");
 
-// Configuration du transporteur email
 const transporter = nodemailer.createTransport({
   service: "gmail", // ou 'outlook', 'yahoo', etc.
   auth: {
-    user: process.env.EMAIL_USER, // ton email
-    pass: process.env.EMAIL_PASSWORD, // mot de passe d'application
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD,
   },
 });
 
@@ -35,7 +34,7 @@ const sendTwoFactorEmail = async (email, code) => {
     await transporter.sendMail(mailOptions);
     return { success: true };
   } catch (error) {
-    console.error("Email send error:", error);
+    console.error("Erreur envoi email:", error);
     return { success: false, error: error.message };
   }
 };
@@ -73,7 +72,7 @@ const sendResetPasswordEmail = async (email, resetToken) => {
     await transporter.sendMail(mailOptions);
     return { success: true };
   } catch (error) {
-    console.error("Email send error:", error);
+    console.error("Erreur envoi email:", error);
     return { success: false, error: error.message };
   }
 };

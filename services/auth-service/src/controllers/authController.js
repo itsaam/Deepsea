@@ -44,8 +44,8 @@ async function getme(req, res) {
     const user = await authService.getUserById(userId);
     return res.json(user);
   } catch (err) {
-    console.error("Get me error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    console.error("Erreur récupération utilisateur:", err);
+    return res.status(500).json({ error: "Erreur interne du serveur" });
   }
 }
 
@@ -55,8 +55,8 @@ async function refreshToken(req, res) {
     const result = await authService.refreshToken(userId);
     return res.json(result);
   } catch (err) {
-    console.error("Refresh token error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    console.error("Erreur rafraîchissement token:", err);
+    return res.status(500).json({ error: "Erreur interne du serveur" });
   }
 }
 

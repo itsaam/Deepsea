@@ -22,7 +22,7 @@ app.use("/observations", observationRoutes);
 
 // Route de base
 app.get("/", (req, res) => {
-  res.json({ message: "Observation Service API" });
+  res.json({ message: "API Service d'Observation" });
 });
 
 // Health check

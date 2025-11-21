@@ -26,7 +26,7 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res
     .status(500)
-    .json({ error: "Internal server error", details: err.message });
+    .json({ error: "Erreur interne du serveur", details: err.message });
 });
 
 const PORT = process.env.PORT || 5002;

@@ -27,12 +27,12 @@ app.use("/admin", adminRoutes);
 app.use("/internal", internalRoutes);
 
 app.use((req, res) => {
-  res.status(404).json({ error: "Route not found" });
+  res.status(404).json({ error: "Route introuvable" });
 });
 
 app.use((err, req, res, _next) => {
-  console.error("Unhandled error:", err);
-  res.status(500).json({ error: "Internal server error" });
+  console.error("Erreur non gérée:", err);
+  res.status(500).json({ error: "Erreur interne du serveur" });
 });
 
 app.listen(PORT, () => {
