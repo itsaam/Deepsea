@@ -19,7 +19,8 @@ export default function Navbar() {
       const { data } = await getUserReputation(user.id);
       setReputation(data);
     } catch (error) {
-      console.error("Erreur reputation:", error);
+      // Route reputation pas encore implémentée - ignorer silencieusement
+      setReputation(null);
     }
   };
 

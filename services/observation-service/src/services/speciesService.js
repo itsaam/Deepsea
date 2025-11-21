@@ -43,6 +43,11 @@ const getSpeciesById = async (speciesId) => {
     },
   });
 
+  // Ne pas afficher les espèces supprimées (sauf pour ADMIN qui peut les restaurer)
+  if (species && species.deleted) {
+    return null;
+  }
+
   return species;
 };
 
@@ -51,6 +56,9 @@ const getAllSpecies = async (sortBy = "createdAt") => {
     sortBy === "rarity" ? { rarityScore: "desc" } : { createdAt: "desc" };
 
   const species = await prisma.species.findMany({
+    where: {
+      deleted: false, // Ne pas afficher les espèces supprimées
+    },
     include: {
       _count: {
         select: { observations: true },
@@ -62,8 +70,60 @@ const getAllSpecies = async (sortBy = "createdAt") => {
   return species;
 };
 
+const softDeleteSpecies = async (speciesId, userId) => {
+  const species = await prisma.species.findUnique({
+    where: { id: speciesId },
+  });
+
+  if (!species) {
+    throw new Error("Espèce non trouvée");
+  }
+
+  if (species.deleted) {
+    throw new Error("Cette espèce est déjà supprimée");
+  }
+
+  const deletedSpecies = await prisma.species.update({
+    where: { id: speciesId },
+    data: {
+      deleted: true,
+      deletedBy: userId,
+      deletedAt: new Date(),
+    },
+  });
+
+  return deletedSpecies;
+};
+
+const restoreSpecies = async (speciesId) => {
+  const species = await prisma.species.findUnique({
+    where: { id: speciesId },
+  });
+
+  if (!species) {
+    throw new Error("Espèce non trouvée");
+  }
+
+  if (!species.deleted) {
+    throw new Error("Cette espèce n'est pas supprimée");
+  }
+
+  const restoredSpecies = await prisma.species.update({
+    where: { id: speciesId },
+    data: {
+      deleted: false,
+      deletedBy: null,
+      deletedAt: null,
+    },
+  });
+
+  return restoredSpecies;
+};
+
 module.exports = {
   createSpecies,
   getSpeciesById,
   getAllSpecies,
+  softDeleteSpecies,
+  restoreSpecies,
 };

@@ -29,6 +29,12 @@ const createObservation = async (observationData, authorId) => {
     throw new Error("Espèce non trouvée");
   }
 
+  if (species.deleted) {
+    throw new Error(
+      "Impossible de créer une observation sur une espèce supprimée"
+    );
+  }
+
   const newObservation = await prisma.observation.create({
     data: {
       speciesId: parseInt(observationData.speciesId),

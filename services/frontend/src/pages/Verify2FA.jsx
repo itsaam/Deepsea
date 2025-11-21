@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { verify2FA } from "../services/api";
 import { useAuth } from "../context/AuthContext";
@@ -13,8 +13,14 @@ export default function Verify2FA() {
   // Récupérer le userId depuis localStorage
   const userId = localStorage.getItem("pending2FA");
 
+  // Rediriger si pas de userId en attente de 2FA
+  useEffect(() => {
+    if (!userId) {
+      navigate("/login");
+    }
+  }, [userId, navigate]);
+
   if (!userId) {
-    navigate("/login");
     return null;
   }
 

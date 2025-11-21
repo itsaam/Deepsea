@@ -43,6 +43,10 @@ export const getAllSpecies = (sortBy) =>
   observationAPI.get("/species", { params: { sortBy } });
 export const getSpeciesById = (id) => observationAPI.get(`/species/${id}`);
 export const createSpecies = (data) => observationAPI.post("/species", data);
+export const softDeleteSpecies = (id) =>
+  observationAPI.patch(`/species/${id}/soft-delete`);
+export const restoreSpecies = (id) =>
+  observationAPI.patch(`/species/${id}/restore`);
 
 // OBSERVATIONS
 export const getAllObservations = () => observationAPI.get("/observations");
@@ -54,6 +58,10 @@ export const validateObservation = (id) =>
   observationAPI.post(`/observations/${id}/validate`);
 export const rejectObservation = (id) =>
   observationAPI.post(`/observations/${id}/reject`);
+export const softDeleteObservation = (id) =>
+  observationAPI.patch(`/observations/${id}/soft-delete`);
+export const restoreObservation = (id) =>
+  observationAPI.patch(`/observations/${id}/restore`);
 
 // REPUTATION
 export const getUserReputation = (userId) =>

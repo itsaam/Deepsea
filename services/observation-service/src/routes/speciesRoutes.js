@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
+const requireRole = require("../middlewares/roleMiddleware");
 const speciesService = require("../services/speciesService");
 
 /**
@@ -112,5 +113,88 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+/**
+ * @swagger
+ * /species/{id}/soft-delete:
+ *   patch:
+ *     summary: Supprimer une espèce (soft delete)
+ *     tags: [Species]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Espèce supprimée (soft delete)
+ *       403:
+ *         description: Accès refusé
+ *       404:
+ *         description: Espèce non trouvée
+ */
+router.patch(
+  "/:id/soft-delete",
+  authMiddleware,
+  requireRole("EXPERT", "ADMIN"),
+  async (req, res) => {
+    try {
+      const deletedSpecies = await speciesService.softDeleteSpecies(
+        parseInt(req.params.id),
+        req.user.id
+      );
+      res.status(200).json({
+        message: "Espèce supprimée (soft delete)",
+        species: deletedSpecies,
+      });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /species/{id}/restore:
+ *   patch:
+ *     summary: Restaurer une espèce supprimée
+ *     tags: [Species]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Espèce restaurée
+ *       403:
+ *         description: Accès refusé (ADMIN uniquement)
+ *       404:
+ *         description: Espèce non trouvée
+ */
+router.patch(
+  "/:id/restore",
+  authMiddleware,
+  requireRole("ADMIN"),
+  async (req, res) => {
+    try {
+      const restoredSpecies = await speciesService.restoreSpecies(
+        parseInt(req.params.id)
+      );
+      res.status(200).json({
+        message: "Espèce restaurée",
+        species: restoredSpecies,
+      });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
 
 module.exports = router;

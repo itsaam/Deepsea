@@ -3,6 +3,8 @@ import {
   getAllObservations,
   validateObservation,
   rejectObservation,
+  softDeleteObservation,
+  restoreObservation,
 } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
@@ -46,9 +48,36 @@ export default function ObservationsList() {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (
+      !confirm(
+        "Supprimer cette observation ? (suppression douce - restaurable)"
+      )
+    )
+      return;
+    try {
+      await softDeleteObservation(id);
+      alert("Observation supprimée (soft delete)");
+      loadObservations();
+    } catch (error) {
+      alert(error.response?.data?.error || "Erreur");
+    }
+  };
+
+  const handleRestore = async (id) => {
+    try {
+      await restoreObservation(id);
+      alert("Observation restaurée !");
+      loadObservations();
+    } catch (error) {
+      alert(error.response?.data?.error || "Erreur");
+    }
+  };
+
   const filteredObs = observations.filter((obs) => {
     if (filter === "all") return true;
-    return obs.status === filter.toUpperCase();
+    if (filter === "deleted") return obs.deleted;
+    return obs.status === filter.toUpperCase() && !obs.deleted;
   });
 
   return (
@@ -68,6 +97,7 @@ export default function ObservationsList() {
             <option value="pending">En attente</option>
             <option value="validated">Validées</option>
             <option value="rejected">Rejetées</option>
+            <option value="deleted">Supprimées</option>
           </select>
         </div>
 
@@ -110,6 +140,37 @@ export default function ObservationsList() {
                       Rejeter
                     </button>
                   </div>
+                )}
+
+                {/* Delete button for EXPERT/ADMIN on validated/rejected observations only */}
+                {(user?.role === "EXPERT" || user?.role === "ADMIN") &&
+                  !obs.deleted &&
+                  (obs.status === "VALIDATED" || obs.status === "REJECTED") && (
+                    <button
+                      onClick={() => handleDelete(obs.id)}
+                      className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 mt-2"
+                    >
+                      🗑️ Supprimer
+                    </button>
+                  )}
+
+                {/* Restore button for ADMIN on deleted observations */}
+                {user?.role === "ADMIN" && obs.deleted && (
+                  <button
+                    onClick={() => handleRestore(obs.id)}
+                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mt-2"
+                  >
+                    ♻️ Restaurer
+                  </button>
+                )}
+
+                {/* Display deleted status */}
+                {obs.deleted && (
+                  <p className="text-red-600 font-semibold mt-2">
+                    ❌ Supprimée
+                    {obs.deletedAt &&
+                      ` le ${new Date(obs.deletedAt).toLocaleDateString()}`}
+                  </p>
                 )}
               </div>
             ))}

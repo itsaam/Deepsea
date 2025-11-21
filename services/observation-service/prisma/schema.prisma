@@ -12,6 +12,9 @@ model Species {
   authorId      Int
   name          String        @unique
   rarityScore   Float         @default(1.0) 
+  deleted       Boolean       @default(false)
+  deletedBy     Int?
+  deletedAt     DateTime?
   createdAt     DateTime      @default(now())
   observations  Observation[]
 }
