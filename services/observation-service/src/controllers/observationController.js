@@ -12,23 +12,16 @@ const observationController = {
         const observationData = req.body;
 
         // Récupérer le nom de l'espèce depuis la DB
-        let speciesName = "Unknown";
-        if (observationData.speciesId) {
-          try {
-            const species = await prisma.species.findUnique({
-              where: { id: parseInt(observationData.speciesId) },
-              select: { name: true },
-            });
-            if (species) {
-              speciesName = species.name;
-            }
-          } catch (err) {
-            console.warn(
-              "⚠️ Impossible de récupérer le nom de l'espèce:",
-              err.message
-            );
-          }
+        const species = await prisma.species.findUnique({
+          where: { id: parseInt(observationData.speciesId) },
+          select: { name: true },
+        });
+
+        if (!species) {
+          return res.status(404).json({ error: "Espèce non trouvée" });
         }
+
+        const speciesName = species.name;
 
         // Appel à l'AI service pour analyser l'observation
         let aiAnalysis = null;
