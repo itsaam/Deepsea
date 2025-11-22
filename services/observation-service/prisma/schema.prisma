@@ -44,8 +44,34 @@ model UserReputation {
   updatedAt  DateTime @updatedAt
 }
 
+model Notification {
+  id             Int      @id @default(autoincrement())
+  userId         Int      // Destinataire
+  type           NotificationType
+  title          String
+  message        String
+  relatedId      Int?     // ID de l'observation/espèce concernée
+  read           Boolean  @default(false)
+  createdAt      DateTime @default(now())
+}
+
+model ForceReviewUsage {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  usedAt         DateTime @default(now())
+  
+  @@index([userId, usedAt])
+}
+
 enum Status {
   PENDING
   VALIDATED
   REJECTED
+}
+
+enum NotificationType {
+  OBSERVATION_VALIDATED
+  OBSERVATION_REJECTED
+  REPUTATION_UPDATE
+  PROMOTION_EXPERT
 }

@@ -29,6 +29,24 @@ app.use((req, res, next) => {
   next();
 });
 
+// Route racine
+app.get("/", (req, res) => {
+  res.json({
+    service: "DeepSea API Gateway",
+    version: "1.0.0",
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: "/health",
+      api: "/api/*",
+      auth: "/api/auth/*",
+      observations: "/api/observations*",
+      species: "/api/species*",
+      taxonomy: "/api/taxonomy*",
+    },
+  });
+});
+
 // Health check
 app.get("/health", (req, res) => {
   res.json({

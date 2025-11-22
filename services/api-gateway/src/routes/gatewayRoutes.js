@@ -32,6 +32,16 @@ router.all("/reputation/*", jwtMiddleware, rateLimitMiddleware, (req, res) => {
   proxyRequest(services.OBSERVATION_SERVICE, req, res);
 });
 
+// Notifications routes (Observation Service)
+router.all(
+  "/notifications*",
+  jwtMiddleware,
+  rateLimitMiddleware,
+  (req, res) => {
+    proxyRequest(services.OBSERVATION_SERVICE, req, res);
+  }
+);
+
 // Taxonomy routes
 router.all("/taxonomy*", jwtMiddleware, rateLimitMiddleware, (req, res) => {
   proxyRequest(services.TAXONOMY_SERVICE, req, res);

@@ -10,6 +10,7 @@ const observationController = {
     (async () => {
       try {
         const observationData = req.body;
+        const forceReview = req.body.forceReview === true; // Flag pour forcer la création
 
         // 🔒 VÉRIFIER LE RATE LIMIT EN PREMIER (sauf ADMIN)
         const { canSubmitObservation } = require("../utils/validators");
@@ -61,14 +62,54 @@ const observationController = {
               console.log(
                 `🚫 Observation rejetée : spam/qualité insuffisante - User ID: ${req.user.id}, Username: ${req.user.username}, Score: ${aiAnalysis.qualityScore}/10`
               );
-              return res.status(400).json({
-                error: "Observation rejetée automatiquement",
-                reason: aiAnalysis.isSpam
-                  ? "Le contenu a été identifié comme spam par notre système d'analyse"
-                  : "La description ne contient pas assez de détails scientifiques",
-                details: aiAnalysis.reason,
-                detectedIssues: aiAnalysis.detectedIssues || [],
-              });
+
+              // Si forceReview = true, vérifier si l'utilisateur peut l'utiliser
+              if (forceReview) {
+                // Vérifier combien de fois l'utilisateur a utilisé Force Review dans la dernière heure
+                const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+                const recentUsages = await prisma.forceReviewUsage.count({
+                  where: {
+                    userId: req.user.id,
+                    usedAt: {
+                      gte: oneHourAgo,
+                    },
+                  },
+                });
+
+                if (recentUsages >= 1) {
+                  return res.status(429).json({
+                    error: "Limite de Force Review atteinte",
+                    reason:
+                      "Vous avez déjà utilisé le Force Review dans la dernière heure. Veuillez attendre avant de réessayer.",
+                    canForceReview: false,
+                  });
+                }
+
+                // Enregistrer l'utilisation du Force Review
+                await prisma.forceReviewUsage.create({
+                  data: {
+                    userId: req.user.id,
+                  },
+                });
+
+                console.log(
+                  `⚠️ Force Review utilisé - User ID: ${req.user.id}, Username: ${req.user.username}`
+                );
+                // Continuer avec la création de l'observation
+              } else {
+                // Retourner l'erreur avec l'option de forcer
+                return res.status(400).json({
+                  error: "Observation rejetée automatiquement",
+                  reason: aiAnalysis.isSpam
+                    ? "Le contenu a été identifié comme spam par notre système d'analyse"
+                    : "La description ne contient pas assez de détails scientifiques",
+                  details: aiAnalysis.reason,
+                  detectedIssues: aiAnalysis.detectedIssues || [],
+                  canForceReview: true,
+                  forceReviewMessage:
+                    "Vous pouvez forcer la création de cette observation pour une revue manuelle (1 fois par heure).",
+                });
+              }
             }
           }
         } catch (aiError) {

@@ -9,3 +9,9 @@ logs/*.log
 
 # Test scripts
 test-*.sh
+check-*.js
+reset-*.js
+
+# Migrations SQL
+**/migrations/**/*.sql
+**/migrations/**/migration.sql

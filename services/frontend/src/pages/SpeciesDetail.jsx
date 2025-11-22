@@ -13,6 +13,9 @@ export default function SpeciesDetail() {
   const [success, setSuccess] = useState("");
   const [rateLimitUntil, setRateLimitUntil] = useState(null);
   const [remainingTime, setRemainingTime] = useState(0);
+  const [canForceReview, setCanForceReview] = useState(false);
+  const [forceReviewMessage, setForceReviewMessage] = useState("");
+  const [rejectedData, setRejectedData] = useState(null);
 
   // 🔄 Charger le rate limit depuis localStorage au montage
   useEffect(() => {
@@ -82,10 +85,11 @@ export default function SpeciesDetail() {
     }
   };
 
-  const handleSubmitObservation = async (e) => {
+  const handleSubmitObservation = async (e, forceReview = false) => {
     e.preventDefault();
     setError("");
     setSuccess("");
+    setCanForceReview(false);
 
     // Validation côté client
     if (description.trim().length < 10) {
@@ -98,9 +102,14 @@ export default function SpeciesDetail() {
     setSubmitting(true);
 
     try {
-      await createObservation({ speciesId: parseInt(id), description });
+      await createObservation({
+        speciesId: parseInt(id),
+        description,
+        forceReview,
+      });
       setSuccess("Observation créée avec succès !");
       setDescription("");
+      setRejectedData(null);
       loadSpecies();
     } catch (err) {
       const errorData = err.response?.data;
@@ -139,9 +148,23 @@ export default function SpeciesDetail() {
       }
 
       setError(errorMessage);
+
+      // Vérifier si Force Review est disponible
+      if (errorData?.canForceReview) {
+        setCanForceReview(true);
+        setForceReviewMessage(errorData.forceReviewMessage || "");
+        setRejectedData({ speciesId: parseInt(id), description });
+      }
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleForceReview = async () => {
+    if (!rejectedData) return;
+
+    const fakeEvent = { preventDefault: () => {} };
+    await handleSubmitObservation(fakeEvent, true);
   };
 
   if (loading) return <div>Chargement...</div>;
@@ -179,6 +202,22 @@ export default function SpeciesDetail() {
               <div className="bg-red-50 border-2 border-red-300 rounded p-4 mb-4">
                 <p className="text-red-700 font-bold mb-2">❌ Erreur</p>
                 <p className="text-red-600 whitespace-pre-line">{error}</p>
+
+                {canForceReview && (
+                  <div className="mt-4 pt-4 border-t border-red-200">
+                    <p className="text-sm text-gray-700 mb-3">
+                      ⚠️ {forceReviewMessage}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleForceReview}
+                      disabled={submitting}
+                      className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all text-sm font-semibold"
+                    >
+                      🚀 Forcer la revue manuelle
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             {success && <p className="text-green-500 mb-4">{success}</p>}

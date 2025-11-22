@@ -7,6 +7,7 @@ require("dotenv").config();
 
 const speciesRoutes = require("./routes/speciesRoutes");
 const observationRoutes = require("./routes/observationRoutes");
+const notificationRoutes = require("./routes/notification.routes");
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Routes
 app.use("/species", speciesRoutes);
 app.use("/observations", observationRoutes);
+app.use("/notifications", notificationRoutes);
 
 // Route de base
 app.get("/", (req, res) => {

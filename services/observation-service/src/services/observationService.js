@@ -6,6 +6,7 @@ const {
 } = require("../utils/validators");
 const reputationService = require("./reputationService");
 const { updateSpeciesRarity } = require("../utils/rarityCalculator");
+const notificationService = require("./notificationService");
 
 const createObservation = async (
   observationData,
@@ -131,6 +132,15 @@ const validateObservation = async (
 
   await updateSpeciesRarity(observation.speciesId);
 
+  // 🔔 Créer une notification pour l'auteur
+  await notificationService.createNotification(
+    observation.authorId,
+    "OBSERVATION_VALIDATED",
+    "Observation validée !",
+    `Votre observation de l'espèce "${validatedObservation.species.name}" a été validée.`,
+    observationId
+  );
+
   return validatedObservation;
 };
 
@@ -167,6 +177,15 @@ const rejectObservation = async (
   });
 
   await reputationService.updateReputation(observation.authorId, -1);
+
+  // 🔔 Créer une notification pour l'auteur
+  await notificationService.createNotification(
+    observation.authorId,
+    "OBSERVATION_REJECTED",
+    "Observation rejetée",
+    `Votre observation de l'espèce "${rejectedObservation.species.name}" a été rejetée.`,
+    observationId
+  );
 
   return rejectedObservation;
 };

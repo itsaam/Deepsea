@@ -11,10 +11,6 @@ const observationCreationLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  // Rate limit par utilisateur (basé sur userId)
-  keyGenerator: (req) => {
-    return req.user?.id?.toString() || req.ip;
-  },
   // Exemption pour les ADMIN
   skip: (req) => {
     return req.user && req.user.role === "ADMIN";
