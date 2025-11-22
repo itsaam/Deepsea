@@ -41,8 +41,10 @@ class AnalysisService {
     const prompt = `Tu es un biologiste marin expert qui évalue des observations avec bon sens et bienveillance.
 Analyse cette observation et détermine si elle est crédible pour l'espèce mentionnée.
 
-Espèce : ${speciesName || "Non spécifiée"}
-Description : "${description}"
+⚠️ ATTENTION PRIORITAIRE : Vérifie d'abord si la description correspond bien à l'espèce indiquée !
+
+Espèce demandée : ${speciesName || "Non spécifiée"}
+Description fournie : "${description}"
 
 Réponds UNIQUEMENT avec ce format JSON (sans texte avant ou après) :
 {
@@ -55,34 +57,39 @@ Réponds UNIQUEMENT avec ce format JSON (sans texte avant ou après) :
   "detectedIssues": ["liste des problèmes détectés, vide si aucun"]
 }
 
+🚨 RÈGLE ABSOLUE #1 - VÉRIFICATION DE COHÉRENCE D'ESPÈCE :
+- Lis attentivement l'ESPÈCE DEMANDÉE et la DESCRIPTION
+- Si la description parle clairement d'une AUTRE ESPÈCE → REJETTE immédiatement
+- Exemple FLAGRANT à rejeter : Espèce "Raie manta" + Description parlant de "tortue", "carapace", "écailles préfrontales"
+- Ne te laisse PAS tromper par des descriptions détaillées : si c'est la mauvaise espèce, c'est REJECT !
+
 RÈGLES D'ÉVALUATION (applique ton bon sens de biologiste) :
 
+❌ REJETTE (REJECT) IMMÉDIATEMENT si :
+1. **CONFUSION D'ESPÈCE** : la description décrit CLAIREMENT une autre espèce que celle demandée
+   - Ex: Espèce "Raie manta" mais description mentionne "carapace", "tortue", "écailles" → REJECT
+   - Ex: Espèce "Requin" mais description parle de "nageoires de baleine", "souffle" → REJECT
+2. **Incohérence biologique FLAGRANTE** : dimensions impossibles, couleurs inexistantes, anatomie science-fiction
+3. **Mélange de caractéristiques INCOMPATIBLES** : poisson avec plumes, mammifère avec écailles
+
 ✅ ACCEPTE (VALIDATE) si :
-- Description plausible avec des détails observables réalistes (couleur normale, taille cohérente, comportement typique)
-- Observation courte mais crédible (ex: "Tortue avec carapace abîmée noire")
-- Mention d'une anomalie possible mais biologiquement réaliste (albinisme, mélanisme, blessure, etc.)
-- Localisation + comportement observé de façon sincère
-- Question légitime sur une variante de l'espèce
+- Description correspond BIEN à l'espèce demandée
+- Détails plausibles et cohérents (couleur normale, taille cohérente, comportement typique)
+- Observation courte mais crédible
+- Mention d'anomalie biologiquement réaliste (albinisme, mélanisme, blessure)
 
 ⚠️ REVIEW (pour validation humaine) si :
-- Description BIZARRE mais pas impossible (ex: couleur inhabituelle, taille limite haute/basse, comportement étrange)
+- Bonne espèce MAIS caractéristiques inhabituelles mais pas impossibles
 - Manque de détails importants mais observation potentiellement vraie
-- Doute raisonnable qui nécessite l'avis d'un expert humain
-- Caractéristiques à la limite du plausible
-
-❌ REJETTE (REJECT) si :
-- **Incohérence biologique FLAGRANTE** (ex: requin de 20m, couleurs impossibles comme "rose bleu rouge", créature de science-fiction)
-- Dimensions TOTALEMENT irréalistes pour l'espèce (queue de 20m pour un requin-marteau = MAX 6m dans la réalité)
-- Mélange de caractéristiques INCOMPATIBLES (ex: poisson avec des plumes, mammifère avec des écailles)
+- Doute raisonnable nécessitant l'avis d'un expert
 
 EXEMPLES DE JUGEMENT :
-- "Tortue carapace abîmée noire" → VALIDATE (plausible, mélanisme possible)
-- "Requin rose bleu avec queue de 20m" → REJECT (couleurs impossibles + taille irréaliste)
-- "Méduse bioluminescente très grande" → REVIEW (à vérifier, taille non précisée)
-- "Poisson clown albinos" → VALIDATE (mutation connue)
-- "Baleine volante avec ailes" → REJECT (impossible biologiquement)
+- Espèce "Tortue verte" + "carapace ovale vert-olive, plastron jaunâtre" → VALIDATE ✅
+- Espèce "Raie manta" + "carapace ovale, tortue, écailles préfrontales" → REJECT ❌ (c'est une tortue!)
+- Espèce "Requin-marteau" + "requin avec queue de 20m" → REJECT ❌ (taille impossible)
+- Espèce "Méduse" + "méduse bioluminescente géante" → REVIEW ⚠️ (vérifier taille)
 
-Utilise tes connaissances en biologie marine pour juger avec intelligence.`;
+Utilise tes connaissances en biologie marine pour juger avec intelligence ET vigilance.`;
 
     const response = await ollamaService.generate(prompt, { temperature: 0.3 });
     return ollamaService.parseJSON(response);

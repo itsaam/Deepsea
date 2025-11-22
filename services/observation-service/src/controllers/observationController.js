@@ -11,6 +11,22 @@ const observationController = {
       try {
         const observationData = req.body;
 
+        // 🔒 VÉRIFIER LE RATE LIMIT EN PREMIER (sauf ADMIN)
+        const { canSubmitObservation } = require("../utils/validators");
+        if (req.user.role !== "ADMIN") {
+          const submitCheck = await canSubmitObservation(
+            req.user.id,
+            observationData.speciesId,
+            req.user.role
+          );
+          if (!submitCheck.valid) {
+            return res.status(429).json({
+              error: "Limite de soumission atteinte",
+              details: submitCheck.error,
+            });
+          }
+        }
+
         // Récupérer le nom de l'espèce depuis la DB
         const species = await prisma.species.findUnique({
           where: { id: parseInt(observationData.speciesId) },
@@ -23,7 +39,7 @@ const observationController = {
 
         const speciesName = species.name;
 
-        // Appel à l'AI service pour analyser l'observation
+        // Appel à l'AI service pour analyser l'observation (APRÈS rate limit)
         let aiAnalysis = null;
         try {
           const aiResponse = await axios.post(

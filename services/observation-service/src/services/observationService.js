@@ -18,6 +18,8 @@ const createObservation = async (
     throw new Error(dataValidation.errors.join(", "));
   }
 
+  // ⚠️ Le rate limit est maintenant vérifié dans le controller AVANT l'appel IA
+  // On garde cette vérification en backup au cas où
   const submitCheck = await canSubmitObservation(
     authorId,
     observationData.speciesId,

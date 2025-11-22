@@ -11,10 +11,65 @@ export default function SpeciesDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [rateLimitUntil, setRateLimitUntil] = useState(null);
+  const [remainingTime, setRemainingTime] = useState(0);
+
+  // 🔄 Charger le rate limit depuis localStorage au montage
+  useEffect(() => {
+    const storageKey = `rateLimit_species_${id}`;
+    const savedLimit = localStorage.getItem(storageKey);
+
+    if (savedLimit) {
+      const limitTime = parseInt(savedLimit, 10);
+      const now = Date.now();
+
+      // Si le délai n'est pas encore écoulé
+      if (limitTime > now) {
+        setRateLimitUntil(limitTime);
+        const minutes = Math.ceil((limitTime - now) / 60000);
+        setError(
+          `⏱️ Rate limit actif\n\nVeuillez attendre avant de soumettre une nouvelle observation pour cette espèce.\n\nTemps restant affiché dans le bouton ci-dessous.`
+        );
+      } else {
+        // Nettoyer si expiré
+        localStorage.removeItem(storageKey);
+      }
+    }
+  }, [id]);
 
   useEffect(() => {
     loadSpecies();
   }, [id]);
+
+  // Timer pour le rate limit
+  useEffect(() => {
+    if (!rateLimitUntil) {
+      setRemainingTime(0);
+      return;
+    }
+
+    const updateTimer = () => {
+      const now = Date.now();
+      const diff = rateLimitUntil - now;
+
+      if (diff <= 0) {
+        setRateLimitUntil(null);
+        setRemainingTime(0);
+        setError("");
+
+        // 🗑️ Nettoyer localStorage quand le délai est écoulé
+        const storageKey = `rateLimit_species_${id}`;
+        localStorage.removeItem(storageKey);
+      } else {
+        setRemainingTime(Math.ceil(diff / 1000)); // en secondes
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [rateLimitUntil]);
 
   const loadSpecies = async () => {
     try {
@@ -49,6 +104,28 @@ export default function SpeciesDetail() {
       loadSpecies();
     } catch (err) {
       const errorData = err.response?.data;
+
+      // Gestion spéciale du rate limit (429)
+      if (err.response?.status === 429) {
+        const waitTime = errorData?.waitTime || 5;
+        const minutes = Math.ceil(waitTime);
+
+        // Définir le temps d'attente (en millisecondes)
+        const waitUntil = Date.now() + waitTime * 60 * 1000;
+        setRateLimitUntil(waitUntil);
+
+        // 💾 Sauvegarder dans localStorage pour persister après refresh
+        const storageKey = `rateLimit_species_${id}`;
+        localStorage.setItem(storageKey, waitUntil.toString());
+
+        setError(
+          `⏱️ Rate limit atteint\n\nVous avez déjà soumis une observation pour cette espèce récemment.\n\nVeuillez attendre ${minutes} minute${
+            minutes > 1 ? "s" : ""
+          } avant de soumettre une nouvelle observation pour "${species.name}".`
+        );
+        return;
+      }
+
       let errorMessage = errorData?.error || "Erreur lors de la création";
 
       // Afficher les détails de l'IA si disponibles
@@ -108,10 +185,16 @@ export default function SpeciesDetail() {
 
             <button
               type="submit"
-              disabled={submitting}
-              className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
+              disabled={submitting || rateLimitUntil !== null}
+              className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
             >
-              {submitting ? "Envoi..." : "Soumettre"}
+              {submitting
+                ? "Envoi..."
+                : rateLimitUntil
+                ? `Veuillez attendre (${Math.floor(
+                    remainingTime / 60
+                  )}:${String(remainingTime % 60).padStart(2, "0")})`
+                : "Soumettre"}
             </button>
           </form>
         </div>
