@@ -10,7 +10,8 @@ const { updateSpeciesRarity } = require("../utils/rarityCalculator");
 const createObservation = async (
   observationData,
   authorId,
-  aiAnalysis = null
+  aiAnalysis = null,
+  userRole = null
 ) => {
   const dataValidation = validateObservationData(observationData);
   if (!dataValidation.valid) {
@@ -19,7 +20,8 @@ const createObservation = async (
 
   const submitCheck = await canSubmitObservation(
     authorId,
-    observationData.speciesId
+    observationData.speciesId,
+    userRole
   );
   if (!submitCheck.valid) {
     throw new Error(submitCheck.error);
@@ -87,10 +89,15 @@ const getObservationsBySpecies = async (speciesId) => {
   return observations;
 };
 
-const validateObservation = async (observationId, validatorId) => {
+const validateObservation = async (
+  observationId,
+  validatorId,
+  userRole = null
+) => {
   const validationCheck = await canValidateObservation(
     validatorId,
-    parseInt(observationId)
+    parseInt(observationId),
+    userRole
   );
   if (!validationCheck.valid) {
     throw new Error(validationCheck.error);
@@ -125,10 +132,15 @@ const validateObservation = async (observationId, validatorId) => {
   return validatedObservation;
 };
 
-const rejectObservation = async (observationId, validatorId) => {
+const rejectObservation = async (
+  observationId,
+  validatorId,
+  userRole = null
+) => {
   const validationCheck = await canValidateObservation(
     validatorId,
-    parseInt(observationId)
+    parseInt(observationId),
+    userRole
   );
   if (!validationCheck.valid) {
     throw new Error(validationCheck.error);

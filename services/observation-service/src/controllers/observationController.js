@@ -72,7 +72,8 @@ const observationController = {
         const newObservation = await observationService.createObservation(
           observationData,
           req.user.id,
-          aiAnalysis
+          aiAnalysis,
+          req.user.role
         );
 
         res.status(201).json({
@@ -119,7 +120,8 @@ const observationController = {
         const validatedObservation =
           await observationService.validateObservation(
             observationId,
-            req.user.id
+            req.user.id,
+            req.user.role
           );
         res.status(200).json(validatedObservation);
       } catch (error) {
@@ -137,7 +139,8 @@ const observationController = {
         const observationId = req.params.observationId;
         const rejectedObservation = await observationService.rejectObservation(
           observationId,
-          req.user.id
+          req.user.id,
+          req.user.role
         );
         res.status(200).json(rejectedObservation);
       } catch (error) {

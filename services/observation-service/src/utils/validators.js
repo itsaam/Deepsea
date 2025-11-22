@@ -3,8 +3,13 @@ const { isBannedSpecies, getBannedWord } = require("./bannedSpecies");
 
 /**
  * Vérifie qu'un utilisateur ne peut pas valider sa propre observation
+ * SAUF si c'est un ADMIN
  */
-const canValidateObservation = async (userId, observationId) => {
+const canValidateObservation = async (
+  userId,
+  observationId,
+  userRole = null
+) => {
   const observation = await prisma.observation.findUnique({
     where: { id: observationId },
   });
@@ -13,7 +18,8 @@ const canValidateObservation = async (userId, observationId) => {
     return { valid: false, error: "Observation non trouvée" };
   }
 
-  if (observation.authorId === userId) {
+  // ✅ ADMIN peut valider ses propres observations
+  if (observation.authorId === userId && userRole !== "ADMIN") {
     return {
       valid: false,
       error: "Vous ne pouvez pas valider votre propre observation",
@@ -26,8 +32,14 @@ const canValidateObservation = async (userId, observationId) => {
 /**
  * Vérifie qu'un utilisateur n'a pas soumis d'observation pour cette espèce
  * dans les 5 dernières minutes
+ * SAUF si c'est un ADMIN (pas de limite)
  */
-const canSubmitObservation = async (userId, speciesId) => {
+const canSubmitObservation = async (userId, speciesId, userRole = null) => {
+  // ✅ ADMIN bypass le rate limit
+  if (userRole === "ADMIN") {
+    return { valid: true };
+  }
+
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
   const recentObservation = await prisma.observation.findFirst({
