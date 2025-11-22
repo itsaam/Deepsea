@@ -243,9 +243,15 @@ router.post("/:id/validate", authMiddleware, async (req, res) => {
  */
 router.post("/:id/reject", authMiddleware, async (req, res) => {
   try {
+    const rejectionReason = req.body.reason || null; // Raison du rejet
+    console.log(
+      `🔍 DEBUG Reject Route - ID: ${req.params.id}, Reason: "${rejectionReason}"`
+    );
     const rejectedObservation = await observationService.rejectObservation(
       req.params.id,
-      req.user.id
+      req.user.id,
+      req.user.role,
+      rejectionReason
     );
     res.status(200).json(rejectedObservation);
   } catch (error) {

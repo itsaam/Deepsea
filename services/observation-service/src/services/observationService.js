@@ -147,7 +147,8 @@ const validateObservation = async (
 const rejectObservation = async (
   observationId,
   validatorId,
-  userRole = null
+  userRole = null,
+  rejectionReason = null
 ) => {
   const validationCheck = await canValidateObservation(
     validatorId,
@@ -170,6 +171,7 @@ const rejectObservation = async (
       status: "REJECTED",
       validatedBy: validatorId,
       validatedAt: new Date(),
+      rejectionReason: rejectionReason, // Stocker la raison du rejet
     },
     include: {
       species: true,
@@ -178,12 +180,16 @@ const rejectObservation = async (
 
   await reputationService.updateReputation(observation.authorId, -1);
 
-  // 🔔 Créer une notification pour l'auteur
+  // 🔔 Créer une notification pour l'auteur avec la raison
+  const notificationMessage = rejectionReason
+    ? `Votre observation de l'espèce "${rejectedObservation.species.name}" a été rejetée.\n\nRaison: ${rejectionReason}`
+    : `Votre observation de l'espèce "${rejectedObservation.species.name}" a été rejetée.`;
+
   await notificationService.createNotification(
     observation.authorId,
     "OBSERVATION_REJECTED",
     "Observation rejetée",
-    `Votre observation de l'espèce "${rejectedObservation.species.name}" a été rejetée.`,
+    notificationMessage,
     observationId
   );
 

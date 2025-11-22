@@ -1,5 +1,4 @@
 const prisma = require("../config/database");
-const { isBannedSpecies, getBannedWord } = require("./bannedSpecies");
 
 /**
  * Vérifie qu'un utilisateur ne peut pas valider sa propre observation
@@ -107,7 +106,8 @@ const validateObservationData = (data) => {
 };
 
 /**
- * Valide les données d'une espèce
+ * Valide les données d'une espèce (validation basique uniquement)
+ * La vérification aquatique/terrestre est maintenant gérée par l'IA
  */
 const validateSpeciesData = (data) => {
   const errors = [];
@@ -118,14 +118,6 @@ const validateSpeciesData = (data) => {
 
   if (data.name && data.name.length < 3) {
     errors.push("Le nom doit contenir au moins 3 caractères");
-  }
-
-  // Vérification des espèces bannies (animaux terrestres/aériens)
-  if (data.name && isBannedSpecies(data.name)) {
-    const bannedWord = getBannedWord(data.name);
-    errors.push(
-      `Cette espèce n'est pas autorisée dans DeepSea. "${bannedWord}" est un animal terrestre ou aérien. Seules les espèces aquatiques sont acceptées.`
-    );
   }
 
   if (errors.length > 0) {

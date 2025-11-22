@@ -12,21 +12,9 @@ const observationController = {
         const observationData = req.body;
         const forceReview = req.body.forceReview === true; // Flag pour forcer la création
 
-        // 🔒 VÉRIFIER LE RATE LIMIT EN PREMIER (sauf ADMIN)
-        const { canSubmitObservation } = require("../utils/validators");
-        if (req.user.role !== "ADMIN") {
-          const submitCheck = await canSubmitObservation(
-            req.user.id,
-            observationData.speciesId,
-            req.user.role
-          );
-          if (!submitCheck.valid) {
-            return res.status(429).json({
-              error: "Limite de soumission atteinte",
-              details: submitCheck.error,
-            });
-          }
-        }
+        console.log(
+          `🔍 DEBUG - forceReview: ${forceReview}, speciesId: ${observationData.speciesId}, userId: ${req.user.id}, role: ${req.user.role}`
+        );
 
         // Récupérer le nom de l'espèce depuis la DB
         const species = await prisma.species.findUnique({
@@ -40,63 +28,65 @@ const observationController = {
 
         const speciesName = species.name;
 
-        // Appel à l'AI service pour analyser l'observation (APRÈS rate limit)
+        // 🚀 Si Force Review est activé, skip l'analyse IA complètement
         let aiAnalysis = null;
-        try {
-          const aiResponse = await axios.post(
-            `${AI_SERVICE_URL}/api/analyze`,
-            {
-              description: observationData.description,
-              speciesName: speciesName,
+
+        if (forceReview) {
+          // Vérifier si l'utilisateur peut utiliser Force Review
+          const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+          const recentUsages = await prisma.forceReviewUsage.count({
+            where: {
+              userId: req.user.id,
+              usedAt: {
+                gte: oneHourAgo,
+              },
             },
-            {
-              timeout: 30000, // 30 secondes de timeout
-            }
+          });
+
+          if (recentUsages >= 1) {
+            return res.status(429).json({
+              error: "Limite de Force Review atteinte",
+              reason:
+                "Vous avez déjà utilisé le Force Review dans la dernière heure. Veuillez attendre avant de réessayer.",
+              canForceReview: false,
+            });
+          }
+
+          // Enregistrer l'utilisation du Force Review
+          await prisma.forceReviewUsage.create({
+            data: {
+              userId: req.user.id,
+            },
+          });
+
+          console.log(
+            `⚠️ Force Review utilisé - User ID: ${req.user.id}, Username: ${req.user.username} - Skip de l'analyse IA`
           );
 
-          if (aiResponse.data && aiResponse.data.success) {
-            aiAnalysis = aiResponse.data.data;
+          // aiAnalysis reste null pour indiquer que l'observation va en revue manuelle
+        } else {
+          // Appel à l'AI service pour analyser l'observation
+          try {
+            const aiResponse = await axios.post(
+              `${AI_SERVICE_URL}/api/analyze`,
+              {
+                description: observationData.description,
+                speciesName: speciesName,
+              },
+              {
+                timeout: 30000, // 30 secondes de timeout
+              }
+            );
 
-            // Rejet automatique si spam détecté OU qualité trop faible
-            if (aiAnalysis.isSpam || aiAnalysis.qualityScore < 3) {
-              console.log(
-                `🚫 Observation rejetée : spam/qualité insuffisante - User ID: ${req.user.id}, Username: ${req.user.username}, Score: ${aiAnalysis.qualityScore}/10`
-              );
+            if (aiResponse.data && aiResponse.data.success) {
+              aiAnalysis = aiResponse.data.data;
 
-              // Si forceReview = true, vérifier si l'utilisateur peut l'utiliser
-              if (forceReview) {
-                // Vérifier combien de fois l'utilisateur a utilisé Force Review dans la dernière heure
-                const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-                const recentUsages = await prisma.forceReviewUsage.count({
-                  where: {
-                    userId: req.user.id,
-                    usedAt: {
-                      gte: oneHourAgo,
-                    },
-                  },
-                });
-
-                if (recentUsages >= 1) {
-                  return res.status(429).json({
-                    error: "Limite de Force Review atteinte",
-                    reason:
-                      "Vous avez déjà utilisé le Force Review dans la dernière heure. Veuillez attendre avant de réessayer.",
-                    canForceReview: false,
-                  });
-                }
-
-                // Enregistrer l'utilisation du Force Review
-                await prisma.forceReviewUsage.create({
-                  data: {
-                    userId: req.user.id,
-                  },
-                });
-
+              // Rejet automatique si spam détecté OU qualité trop faible
+              if (aiAnalysis.isSpam || aiAnalysis.qualityScore < 3) {
                 console.log(
-                  `⚠️ Force Review utilisé - User ID: ${req.user.id}, Username: ${req.user.username}`
+                  `🚫 Observation rejetée : spam/qualité insuffisante - User ID: ${req.user.id}, Username: ${req.user.username}, Score: ${aiAnalysis.qualityScore}/10`
                 );
-                // Continuer avec la création de l'observation
-              } else {
+
                 // Retourner l'erreur avec l'option de forcer
                 return res.status(400).json({
                   error: "Observation rejetée automatiquement",
@@ -111,18 +101,43 @@ const observationController = {
                 });
               }
             }
+          } catch (aiError) {
+            // L'AI service est down ou ne répond pas - REJET obligatoire
+            console.error(
+              "🚨 Service IA indisponible - Impossible de valider l'observation :",
+              aiError.message
+            );
+            return res.status(503).json({
+              error: "Service de validation temporairement indisponible",
+              reason:
+                "Notre système d'analyse automatique est actuellement hors ligne. Veuillez réessayer dans quelques instants.",
+            });
           }
-        } catch (aiError) {
-          // L'AI service est down ou ne répond pas - REJET obligatoire
-          console.error(
-            "🚨 Service IA indisponible - Impossible de valider l'observation :",
-            aiError.message
+        }
+
+        // 🔒 VÉRIFIER LE RATE LIMIT MAINTENANT (sauf ADMIN et Force Review)
+        // On vérifie APRÈS l'IA pour ne pas bloquer si l'observation est rejetée
+        const { canSubmitObservation } = require("../utils/validators");
+        console.log(
+          `🔍 DEBUG Rate Limit Check - Role: ${
+            req.user.role
+          }, forceReview: ${forceReview}, Skip: ${
+            req.user.role === "ADMIN" || forceReview
+          }`
+        );
+        if (req.user.role !== "ADMIN" && !forceReview) {
+          console.log("⚠️ Checking rate limit...");
+          const submitCheck = await canSubmitObservation(
+            req.user.id,
+            observationData.speciesId,
+            req.user.role
           );
-          return res.status(503).json({
-            error: "Service de validation temporairement indisponible",
-            reason:
-              "Notre système d'analyse automatique est actuellement hors ligne. Veuillez réessayer dans quelques instants.",
-          });
+          if (!submitCheck.valid) {
+            return res.status(429).json({
+              error: "Limite de soumission atteinte",
+              details: submitCheck.error,
+            });
+          }
         }
 
         // Création de l'observation avec l'analyse IA
@@ -194,10 +209,16 @@ const observationController = {
     (async () => {
       try {
         const observationId = req.params.observationId;
+        const rejectionReason = req.body.reason || null; // Raison optionnelle du rejet
+        console.log(
+          `🔍 DEBUG Reject - ID: ${observationId}, Reason: "${rejectionReason}", Body:`,
+          req.body
+        );
         const rejectedObservation = await observationService.rejectObservation(
           observationId,
           req.user.id,
-          req.user.role
+          req.user.role,
+          rejectionReason
         );
         res.status(200).json(rejectedObservation);
       } catch (error) {

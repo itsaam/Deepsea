@@ -163,8 +163,29 @@ export default function SpeciesDetail() {
   const handleForceReview = async () => {
     if (!rejectedData) return;
 
-    const fakeEvent = { preventDefault: () => {} };
-    await handleSubmitObservation(fakeEvent, true);
+    setSubmitting(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      await createObservation({
+        speciesId: rejectedData.speciesId,
+        description: rejectedData.description,
+        forceReview: true,
+      });
+      setSuccess("Observation créée avec succès via Force Review !");
+      setDescription("");
+      setRejectedData(null);
+      setCanForceReview(false);
+      loadSpecies();
+    } catch (err) {
+      const errorData = err.response?.data;
+      setError(
+        errorData?.error || errorData?.reason || "Erreur lors de la création"
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) return <div>Chargement...</div>;

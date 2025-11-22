@@ -20,20 +20,21 @@ model Species {
 }
 
 model Observation {
-  id            Int       @id @default(autoincrement())
-  speciesId     Int
-  authorId      Int
-  description   String
-  status        Status    @default(PENDING)
-  validatedBy   Int?
-  validatedAt   DateTime?
-  aiAnalysis    Json?
-  deleted       Boolean   @default(false)
-  deletedBy     Int?
-  deletedAt     DateTime?
-  createdAt     DateTime  @default(now())
+  id              Int       @id @default(autoincrement())
+  speciesId       Int
+  authorId        Int
+  description     String
+  status          Status    @default(PENDING)
+  validatedBy     Int?
+  validatedAt     DateTime?
+  rejectionReason String?   // Raison du rejet
+  aiAnalysis      Json?
+  deleted         Boolean   @default(false)
+  deletedBy       Int?
+  deletedAt       DateTime?
+  createdAt       DateTime  @default(now())
   
-  species       Species   @relation(fields: [speciesId], references: [id])
+  species         Species   @relation(fields: [speciesId], references: [id])
 }
 
 model UserReputation { 

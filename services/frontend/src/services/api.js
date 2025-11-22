@@ -44,7 +44,8 @@ export const getObservationsBySpecies = (speciesId) =>
 export const createObservation = (data) => API.post("/observations", data);
 export const validateObservation = (id) =>
   API.post(`/observations/${id}/validate`);
-export const rejectObservation = (id) => API.post(`/observations/${id}/reject`);
+export const rejectObservation = (id, reason = null) =>
+  API.post(`/observations/${id}/reject`, { reason });
 export const softDeleteObservation = (id) =>
   API.patch(`/observations/${id}/soft-delete`);
 export const restoreObservation = (id) =>

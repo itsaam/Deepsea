@@ -56,8 +56,12 @@ export default function ObservationsList() {
   };
 
   const handleReject = async (id) => {
+    const reason = prompt("Raison du rejet (optionnel) :");
+    if (reason === null) return; // Annulé
+
     try {
-      await rejectObservation(id);
+      // Envoyer la raison même si vide, le backend accepte null ou string
+      await rejectObservation(id, reason.trim() || null);
       loadObservations();
     } catch (error) {
       alert(error.response?.data?.error || "Erreur");
@@ -140,6 +144,28 @@ export default function ObservationsList() {
                     {obs.status}
                   </span>
                 </div>
+
+                {/* 📋 Raison du rejet */}
+                {obs.status === "REJECTED" && obs.rejectionReason && (
+                  <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 rounded">
+                    <p className="font-semibold text-red-800">
+                      Raison du rejet :
+                    </p>
+                    <p className="text-red-700">{obs.rejectionReason}</p>
+                    {obs.validatedBy && (
+                      <p className="text-sm text-red-600 mt-1">
+                        Rejeté par l'utilisateur ID: {obs.validatedBy}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* ✅ Info validation */}
+                {obs.status === "VALIDATED" && obs.validatedBy && (
+                  <div className="mb-4 text-sm text-gray-600">
+                    Validé par l'utilisateur ID: {obs.validatedBy}
+                  </div>
+                )}
 
                 {/* 🤖 Analyse IA */}
                 {aiSuggestions[obs.id] && (
