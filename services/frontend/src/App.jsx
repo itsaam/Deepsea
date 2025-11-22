@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import "./App.css";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Verify2FA from "./pages/Verify2FA";
