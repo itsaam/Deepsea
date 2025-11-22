@@ -5,6 +5,7 @@ import {
   rejectObservation,
   softDeleteObservation,
   restoreObservation,
+  getObservationAiSuggestion,
 } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
@@ -13,6 +14,7 @@ export default function ObservationsList() {
   const [observations, setObservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
+  const [aiSuggestions, setAiSuggestions] = useState({});
   const { user } = useAuth();
 
   useEffect(() => {
@@ -23,6 +25,20 @@ export default function ObservationsList() {
     try {
       const { data } = await getAllObservations();
       setObservations(data);
+
+      // Charger les suggestions IA pour chaque observation
+      const suggestions = {};
+      for (const obs of data) {
+        try {
+          const aiRes = await getObservationAiSuggestion(obs.id);
+          if (aiRes.data.aiSuggestion) {
+            suggestions[obs.id] = aiRes.data.aiSuggestion;
+          }
+        } catch (err) {
+          // Pas de suggestion IA pour cette observation
+        }
+      }
+      setAiSuggestions(suggestions);
     } catch (error) {
       console.error("Erreur:", error);
     } finally {
@@ -124,6 +140,59 @@ export default function ObservationsList() {
                     {obs.status}
                   </span>
                 </div>
+
+                {/* 🤖 Analyse IA */}
+                {aiSuggestions[obs.id] && (
+                  <div
+                    className={`mb-4 p-4 rounded-lg border-2 ${
+                      aiSuggestions[obs.id].recommendation === "REJECT"
+                        ? "bg-red-50 border-red-300"
+                        : aiSuggestions[obs.id].recommendation === "VALIDATE"
+                        ? "bg-green-50 border-green-300"
+                        : "bg-yellow-50 border-yellow-300"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <span className="text-2xl">
+                        {aiSuggestions[obs.id].recommendation === "REJECT"
+                          ? "🚫"
+                          : aiSuggestions[obs.id].recommendation === "VALIDATE"
+                          ? "✅"
+                          : "⚠️"}
+                      </span>
+                      <div className="flex-1">
+                        <p className="font-bold text-lg mb-1">
+                          Analyse IA : {aiSuggestions[obs.id].recommendation}
+                        </p>
+                        <p className="text-sm text-gray-700 mb-2">
+                          {aiSuggestions[obs.id].reason}
+                        </p>
+                        <div className="flex gap-4 text-sm">
+                          <span className="font-semibold">
+                            Confiance: {aiSuggestions[obs.id].confidence}%
+                          </span>
+                          <span className="font-semibold">
+                            Qualité: {aiSuggestions[obs.id].qualityScore}/10
+                          </span>
+                        </div>
+                        {aiSuggestions[obs.id].detectedIssues?.length > 0 && (
+                          <div className="mt-2">
+                            <p className="font-semibold text-red-600">
+                              Problèmes détectés:
+                            </p>
+                            <ul className="list-disc list-inside text-sm text-red-700">
+                              {aiSuggestions[obs.id].detectedIssues.map(
+                                (issue, i) => (
+                                  <li key={i}>{issue}</li>
+                                )
+                              )}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {obs.status === "PENDING" && obs.authorId !== user?.id && (
                   <div className="flex gap-2">

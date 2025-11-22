@@ -46,6 +46,8 @@ export const softDeleteObservation = (id) =>
   API.patch(`/observations/${id}/soft-delete`);
 export const restoreObservation = (id) =>
   API.patch(`/observations/${id}/restore`);
+export const getObservationAiSuggestion = (id) =>
+  API.get(`/observations/${id}/ai-suggestion`);
 
 // ✅ REPUTATION (via API Gateway)
 export const getUserReputation = (userId) => API.get(`/reputation/${userId}`);

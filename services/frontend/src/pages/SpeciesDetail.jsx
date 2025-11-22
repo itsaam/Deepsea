@@ -39,7 +39,20 @@ export default function SpeciesDetail() {
       setDescription("");
       loadSpecies();
     } catch (err) {
-      setError(err.response?.data?.error || "Erreur lors de la création");
+      const errorData = err.response?.data;
+      let errorMessage = errorData?.error || "Erreur lors de la création";
+
+      // Afficher les détails de l'IA si disponibles
+      if (errorData?.details) {
+        errorMessage += `\n\n${errorData.details}`;
+      }
+      if (errorData?.detectedIssues?.length > 0) {
+        errorMessage += `\n\nProblèmes détectés:\n• ${errorData.detectedIssues.join(
+          "\n• "
+        )}`;
+      }
+
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -76,7 +89,12 @@ export default function SpeciesDetail() {
               />
             </div>
 
-            {error && <p className="text-red-500 mb-4">{error}</p>}
+            {error && (
+              <div className="bg-red-50 border-2 border-red-300 rounded p-4 mb-4">
+                <p className="text-red-700 font-bold mb-2">❌ Erreur</p>
+                <p className="text-red-600 whitespace-pre-line">{error}</p>
+              </div>
+            )}
             {success && <p className="text-green-500 mb-4">{success}</p>}
 
             <button
