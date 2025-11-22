@@ -1,9 +1,9 @@
-const axios = require('axios');
+const axios = require("axios");
 
 class OllamaService {
   constructor() {
-    this.baseURL = process.env.OLLAMA_URL || 'http://localhost:11434';
-    this.model = process.env.OLLAMA_MODEL || 'llama3.2:3b';
+    this.baseURL = process.env.OLLAMA_URL || "http://localhost:11434";
+    this.model = process.env.OLLAMA_MODEL || "llama3.2:3b";
   }
 
   /**
@@ -21,13 +21,13 @@ class OllamaService {
         options: {
           temperature: options.temperature || 0.7,
           top_p: options.top_p || 0.9,
-        }
+        },
       });
 
       return response.data.response;
     } catch (error) {
-      console.error('Ollama API Error:', error.message);
-      throw new Error('Failed to generate AI response');
+      console.error("Ollama API Error:", error.message);
+      throw new Error("Failed to generate AI response");
     }
   }
 
@@ -40,15 +40,21 @@ class OllamaService {
     try {
       // Nettoie la réponse (enlève les backticks markdown si présents)
       const cleaned = response
-        .replace(/```json\n?/g, '')
-        .replace(/```\n?/g, '')
+        .replace(/```json\n?/g, "")
+        .replace(/```\n?/g, "")
         .trim();
-      
+
+      // Protection contre les réponses trop grandes (max 10KB)
+      if (cleaned.length > 10000) {
+        console.error("Response too large:", cleaned.length, "bytes");
+        throw new Error("AI response too large to parse");
+      }
+
       return JSON.parse(cleaned);
     } catch (error) {
-      console.error('JSON Parse Error:', error.message);
-      console.error('Raw response:', response);
-      throw new Error('Failed to parse AI response as JSON');
+      console.error("JSON Parse Error:", error.message);
+      console.error("Raw response:", response.substring(0, 200) + "...");
+      throw new Error("Failed to parse AI response as JSON");
     }
   }
 
