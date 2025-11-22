@@ -2,10 +2,48 @@ const prisma = require("../../prismaClient");
 const { hashPassword, comparePassword } = require("../utils/hashUtils");
 const { signToken } = require("../config/jwt");
 
+/**
+ * Calcule la force d'un mot de passe (identique au frontend)
+ * @param {string} pwd - Mot de passe à évaluer
+ * @returns {number} Score de force (0-5)
+ */
+function calculatePasswordStrength(pwd) {
+  let strength = 0;
+  if (pwd.length >= 8) strength++;
+  if (pwd.length >= 12) strength++;
+  if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) strength++;
+  if (/\d/.test(pwd)) strength++;
+  if (/[^a-zA-Z0-9]/.test(pwd)) strength++;
+  return strength;
+}
+
+/**
+ * Valide la force du mot de passe
+ * @param {string} password - Mot de passe à valider
+ * @throws {Error} Si le mot de passe est trop faible
+ */
+function validatePasswordStrength(password) {
+  if (password.length < 8) {
+    throw new Error("Le mot de passe doit contenir au moins 8 caractères");
+  }
+
+  const strength = calculatePasswordStrength(password);
+
+  // Exiger au minimum un score de 2/5 (8+ chars + 1 autre critère)
+  if (strength < 2) {
+    throw new Error(
+      "Le mot de passe est trop faible. Il doit contenir au moins 8 caractères et respecter au moins un des critères suivants : majuscules + minuscules, chiffres, ou caractères spéciaux"
+    );
+  }
+}
+
 async function register({ email, username, password, role }) {
   if (!email || !username || !password) {
     throw new Error("email, username and password are required");
   }
+
+  // 🔒 Validation de la force du mot de passe
+  validatePasswordStrength(password);
 
   const existingEmail = await prisma.user.findUnique({
     where: { email },
