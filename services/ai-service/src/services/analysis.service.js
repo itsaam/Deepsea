@@ -1,4 +1,4 @@
-const ollamaService = require('./ollama.service');
+const ollamaService = require("./ollama.service");
 
 class AnalysisService {
   /**
@@ -7,11 +7,41 @@ class AnalysisService {
    * @param {string} speciesName - Nom de l'espèce
    * @returns {Promise<object>} - Analyse complète
    */
-  async analyzeObservation(description, speciesName = '') {
-    const prompt = `Tu es un biologiste marin expert en créatures abyssales.
-Analyse cette observation scientifique et évalue sa validité.
+  async analyzeObservation(description, speciesName = "") {
+    // 🛡️ DÉTECTION SPAM AVANT ANALYSE BIOLOGIQUE
+    const cleanDesc = description.trim().toLowerCase();
 
-Espèce : ${speciesName || 'Non spécifiée'}
+    // Patterns de spam évidents
+    const spamPatterns = [
+      /^(.)\1{5,}$/, // aaaaaa, zzzzzz
+      /^[a-z]{20,}$/, // azeazeazeazeaze (lettres sans sens)
+      /^(test|lol|mdr|xd)+$/i, // test, lol, mdr
+      /^[0-9]+$/, // que des chiffres
+      /^[^a-z0-9]{10,}$/i, // que des symboles
+      /^(.{2,5})\1{3,}$/, // motifs répétés (azeazeaze)
+    ];
+
+    const isSpamDetected = spamPatterns.some((pattern) =>
+      pattern.test(cleanDesc)
+    );
+
+    if (isSpamDetected || cleanDesc.length < 10) {
+      return {
+        isValid: false,
+        confidence: 95,
+        reason: "Contenu invalide : spam, test ou description trop courte",
+        isSpam: true,
+        qualityScore: 0,
+        recommendation: "REJECT",
+        detectedIssues: ["spam ou contenu non pertinent"],
+      };
+    }
+
+    // 🧬 ANALYSE BIOLOGIQUE si pas spam
+    const prompt = `Tu es un biologiste marin expert qui évalue des observations avec bon sens et bienveillance.
+Analyse cette observation et détermine si elle est crédible pour l'espèce mentionnée.
+
+Espèce : ${speciesName || "Non spécifiée"}
 Description : "${description}"
 
 Réponds UNIQUEMENT avec ce format JSON (sans texte avant ou après) :
@@ -19,17 +49,40 @@ Réponds UNIQUEMENT avec ce format JSON (sans texte avant ou après) :
   "isValid": true ou false,
   "confidence": nombre entre 0 et 100,
   "reason": "explication en 1-2 phrases",
-  "isSpam": true ou false,
+  "isSpam": false,
   "qualityScore": nombre entre 0 et 10,
   "recommendation": "VALIDATE" ou "REJECT" ou "REVIEW",
   "detectedIssues": ["liste des problèmes détectés, vide si aucun"]
 }
 
-Critères de validation :
-- Description détaillée et scientifique
-- Cohérence biologique
-- Pas de spam/blague
-- Informations vérifiables`;
+RÈGLES D'ÉVALUATION (applique ton bon sens de biologiste) :
+
+✅ ACCEPTE (VALIDATE) si :
+- Description plausible avec des détails observables réalistes (couleur normale, taille cohérente, comportement typique)
+- Observation courte mais crédible (ex: "Tortue avec carapace abîmée noire")
+- Mention d'une anomalie possible mais biologiquement réaliste (albinisme, mélanisme, blessure, etc.)
+- Localisation + comportement observé de façon sincère
+- Question légitime sur une variante de l'espèce
+
+⚠️ REVIEW (pour validation humaine) si :
+- Description BIZARRE mais pas impossible (ex: couleur inhabituelle, taille limite haute/basse, comportement étrange)
+- Manque de détails importants mais observation potentiellement vraie
+- Doute raisonnable qui nécessite l'avis d'un expert humain
+- Caractéristiques à la limite du plausible
+
+❌ REJETTE (REJECT) si :
+- **Incohérence biologique FLAGRANTE** (ex: requin de 20m, couleurs impossibles comme "rose bleu rouge", créature de science-fiction)
+- Dimensions TOTALEMENT irréalistes pour l'espèce (queue de 20m pour un requin-marteau = MAX 6m dans la réalité)
+- Mélange de caractéristiques INCOMPATIBLES (ex: poisson avec des plumes, mammifère avec des écailles)
+
+EXEMPLES DE JUGEMENT :
+- "Tortue carapace abîmée noire" → VALIDATE (plausible, mélanisme possible)
+- "Requin rose bleu avec queue de 20m" → REJECT (couleurs impossibles + taille irréaliste)
+- "Méduse bioluminescente très grande" → REVIEW (à vérifier, taille non précisée)
+- "Poisson clown albinos" → VALIDATE (mutation connue)
+- "Baleine volante avec ailes" → REJECT (impossible biologiquement)
+
+Utilise tes connaissances en biologie marine pour juger avec intelligence.`;
 
     const response = await ollamaService.generate(prompt, { temperature: 0.3 });
     return ollamaService.parseJSON(response);
