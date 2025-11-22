@@ -1,6 +1,7 @@
 {
   "name": "deepsea-archives",
   "version": "1.0.0",
+  "type": "module",
   "description": "DeepSea Archives - Marine Species Observation Platform",
   "scripts": {
     "start": "./start-all.sh",
@@ -14,5 +15,9 @@
     "react"
   ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "dotenv": "^16.3.1"
+  }
 }
