@@ -31,6 +31,15 @@ export default function SpeciesDetail() {
     e.preventDefault();
     setError("");
     setSuccess("");
+
+    // Validation côté client
+    if (description.trim().length < 10) {
+      setError(
+        "La description doit contenir au moins 10 caractères pour être analysée par notre système de validation."
+      );
+      return;
+    }
+
     setSubmitting(true);
 
     try {
