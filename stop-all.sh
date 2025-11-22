@@ -17,8 +17,8 @@ if [ -f .pids ]; then
 fi
 
 # Tuer tous les processus sur les ports (au cas où)
-echo "Nettoyage des ports 3000, 3001, 3002, 5002, 5174..."
-lsof -ti:3000,3001,3002,5002,5174 | xargs kill -9 2>/dev/null || true
+echo "Nettoyage des ports 3000, 3001, 3002, 3003, 5002, 5174..."
+lsof -ti:3000,3001,3002,3003,5002,5174 | xargs kill -9 2>/dev/null || true
 
 echo ""
 echo -e "${GREEN}✅ Tous les services sont arrêtés !${NC}"
