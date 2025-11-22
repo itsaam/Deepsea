@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
 const observationService = require("../services/observationService");
+const observationController = require("../controllers/observationController");
 
 /**
  * @swagger
@@ -77,17 +78,7 @@ router.get("/", authMiddleware, async (req, res) => {
  *       401:
  *         description: Non authentifié
  */
-router.post("/", authMiddleware, async (req, res) => {
-  try {
-    const newObservation = await observationService.createObservation(
-      req.body,
-      req.user.id
-    );
-    res.status(201).json(newObservation);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
+router.post("/", authMiddleware, observationController.createObservation);
 
 /**
  * @swagger
@@ -121,6 +112,64 @@ router.get("/species/:id/observations", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+/**
+ * @swagger
+ * /observations/{id}/ai-suggestion:
+ *   get:
+ *     summary: Récupérer une observation avec ses suggestions IA
+ *     tags: [Observations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de l'observation
+ *     responses:
+ *       200:
+ *         description: Observation avec suggestions IA
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 description:
+ *                   type: string
+ *                 status:
+ *                   type: string
+ *                 aiSuggestion:
+ *                   type: object
+ *                   properties:
+ *                     recommendation:
+ *                       type: string
+ *                       enum: [VALIDATE, REJECT, REVIEW]
+ *                     confidence:
+ *                       type: number
+ *                     qualityScore:
+ *                       type: number
+ *                     reason:
+ *                       type: string
+ *                     isValid:
+ *                       type: boolean
+ *                     detectedIssues:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *       404:
+ *         description: Observation non trouvée
+ *       401:
+ *         description: Non authentifié
+ */
+router.get(
+  "/:id/ai-suggestion",
+  authMiddleware,
+  observationController.getObservationWithAiSuggestion
+);
 
 /**
  * @swagger
@@ -222,8 +271,10 @@ router.post("/:id/reject", authMiddleware, async (req, res) => {
  */
 router.get("/", async (req, res) => {
   try {
-    const includeDeleted = req.query.includeDeleted === 'true';
-    const observations = await observationService.getAllObservations(includeDeleted);
+    const includeDeleted = req.query.includeDeleted === "true";
+    const observations = await observationService.getAllObservations(
+      includeDeleted
+    );
     res.status(200).json(observations);
   } catch (error) {
     res.status(500).json({ error: error.message });

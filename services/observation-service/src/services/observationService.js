@@ -7,7 +7,11 @@ const {
 const reputationService = require("./reputationService");
 const { updateSpeciesRarity } = require("../utils/rarityCalculator");
 
-const createObservation = async (observationData, authorId) => {
+const createObservation = async (
+  observationData,
+  authorId,
+  aiAnalysis = null
+) => {
   const dataValidation = validateObservationData(observationData);
   if (!dataValidation.valid) {
     throw new Error(dataValidation.errors.join(", "));
@@ -41,6 +45,7 @@ const createObservation = async (observationData, authorId) => {
       authorId: authorId,
       description: observationData.description,
       status: "PENDING",
+      aiAnalysis: aiAnalysis, // Stockage de l'analyse IA
     },
     include: {
       species: true,
@@ -208,6 +213,17 @@ const restoreObservation = async (observationId) => {
   return restoredObservation;
 };
 
+const getObservationById = async (observationId) => {
+  const observation = await prisma.observation.findUnique({
+    where: { id: observationId },
+    include: {
+      species: true,
+    },
+  });
+
+  return observation;
+};
+
 module.exports = {
   createObservation,
   getAllObservations,
@@ -216,4 +232,5 @@ module.exports = {
   rejectObservation,
   softDeleteObservation,
   restoreObservation,
+  getObservationById,
 };

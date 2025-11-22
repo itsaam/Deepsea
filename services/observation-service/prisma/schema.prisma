@@ -27,6 +27,7 @@ model Observation {
   status        Status    @default(PENDING)
   validatedBy   Int?
   validatedAt   DateTime?
+  aiAnalysis    Json?
   deleted       Boolean   @default(false)
   deletedBy     Int?
   deletedAt     DateTime?
