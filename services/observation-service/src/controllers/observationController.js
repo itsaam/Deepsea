@@ -43,32 +43,32 @@ const observationController = {
             // Rejet automatique si spam détecté OU qualité trop faible
             if (aiAnalysis.isSpam || aiAnalysis.qualityScore < 3) {
               console.log(
-                `🚫 Observation rejetée : spam/qualité insuffisante - User ID: ${
-                  req.user.id
-                }, Username: ${
-                  req.user.username
-                }, Score: ${aiAnalysis.qualityScore}/10`
+                `🚫 Observation rejetée : spam/qualité insuffisante - User ID: ${req.user.id}, Username: ${req.user.username}, Score: ${aiAnalysis.qualityScore}/10`
               );
               return res.status(400).json({
                 error: "Observation rejetée automatiquement",
-                reason:
-                  aiAnalysis.isSpam
-                    ? "Le contenu a été identifié comme spam par notre système d'analyse"
-                    : "La description ne contient pas assez de détails scientifiques",
+                reason: aiAnalysis.isSpam
+                  ? "Le contenu a été identifié comme spam par notre système d'analyse"
+                  : "La description ne contient pas assez de détails scientifiques",
                 details: aiAnalysis.reason,
                 detectedIssues: aiAnalysis.detectedIssues || [],
               });
             }
           }
         } catch (aiError) {
-          // L'AI service est down ou ne répond pas - on continue sans l'analyse
-          console.warn(
-            "⚠️ Service IA indisponible, création de l'observation sans analyse :",
+          // L'AI service est down ou ne répond pas - REJET obligatoire
+          console.error(
+            "🚨 Service IA indisponible - Impossible de valider l'observation :",
             aiError.message
           );
+          return res.status(503).json({
+            error: "Service de validation temporairement indisponible",
+            reason:
+              "Notre système d'analyse automatique est actuellement hors ligne. Veuillez réessayer dans quelques instants.",
+          });
         }
 
-        // Création de l'observation avec l'analyse IA (si disponible)
+        // Création de l'observation avec l'analyse IA
         const newObservation = await observationService.createObservation(
           observationData,
           req.user.id,
