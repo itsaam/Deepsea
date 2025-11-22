@@ -26,9 +26,6 @@ const observationController = {
         // Appel à l'AI service pour analyser l'observation
         let aiAnalysis = null;
         try {
-          console.log(
-            `📡 Appel au service IA pour analyser l'observation de "${speciesName}"...`
-          );
           const aiResponse = await axios.post(
             `${AI_SERVICE_URL}/api/analyze`,
             {
@@ -42,28 +39,22 @@ const observationController = {
 
           if (aiResponse.data && aiResponse.data.success) {
             aiAnalysis = aiResponse.data.data;
-            console.log("✅ Analyse IA reçue:", {
-              isSpam: aiAnalysis.isSpam,
-              recommendation: aiAnalysis.recommendation,
-              qualityScore: aiAnalysis.qualityScore,
-            });
 
-            // Rejet automatique si spam détecté
-            if (aiAnalysis.isSpam) {
+            // Rejet automatique si spam détecté OU qualité trop faible
+            if (aiAnalysis.isSpam || aiAnalysis.qualityScore < 3) {
               console.log(
-                `🚫 Observation rejetée : spam détecté par l'IA - User ID: ${
+                `🚫 Observation rejetée : spam/qualité insuffisante - User ID: ${
                   req.user.id
                 }, Username: ${
                   req.user.username
-                }, Description: "${observationData.description.substring(
-                  0,
-                  50
-                )}..."`
+                }, Score: ${aiAnalysis.qualityScore}/10`
               );
               return res.status(400).json({
                 error: "Observation rejetée automatiquement",
                 reason:
-                  "Le contenu a été identifié comme spam par notre système d'analyse",
+                  aiAnalysis.isSpam
+                    ? "Le contenu a été identifié comme spam par notre système d'analyse"
+                    : "La description ne contient pas assez de détails scientifiques",
                 details: aiAnalysis.reason,
                 detectedIssues: aiAnalysis.detectedIssues || [],
               });

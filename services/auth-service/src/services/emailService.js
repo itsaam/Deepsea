@@ -32,9 +32,11 @@ const sendTwoFactorEmail = async (email, code) => {
 
   try {
     await transporter.sendMail(mailOptions);
+    console.log(`✉️  Code 2FA envoyé à ${email}`);
     return { success: true };
   } catch (error) {
     console.error("Erreur envoi email:", error);
+    console.log(`⚠️  FALLBACK - Impossible d'envoyer le code 2FA à ${email}`);
     return { success: false, error: error.message };
   }
 };
