@@ -18,9 +18,30 @@ Les espèces évoluent en fonction des observations collectées, avec un systèm
 
 ## 📋 Documentation
 
-- [🏗️ Architecture complète](./docs/ARCHITECTURE.md)
-- [🗄️ Schémas des bases de données (ERD)](./docs/DATABASE_SCHEMA.md)
-- [🚪 Guide API Gateway](./docs/API_GATEWAY_GUIDE.md)
+### 📚 Documentation complète
+
+- **[🏗️ ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - Architecture complète du système
+  - Vue d'ensemble microservices
+  - Service Layer Pattern détaillé
+  - Communication inter-services
+  - Sécurité et authentification
+  - CI/CD Pipeline
+- **[📁 PROJECT_STRUCTURE.md](./docs/PROJECT_STRUCTURE.md)** - Structure du projet
+  - Arborescence complète
+  - Organisation des fichiers
+  - Conventions de nommage
+  - Scripts disponibles
+- **[🗄️ DATABASE_SCHEMA.md](./docs/DATABASE_SCHEMA.md)** - Schémas des bases de données
+  - ERD complets
+  - Relations entre tables
+  - Migrations
+- **[🚪 API_GATEWAY_GUIDE.md](./docs/API_GATEWAY_GUIDE.md)** - Guide API Gateway
+  - Configuration du gateway
+  - Rate limiting
+  - JWT middleware
+- **[📖 GUIDE_SIMPLE.md](./docs/GUIDE_SIMPLE.md)** - Guide simplifié
+
+- **[⚙️ INSTALLATION_GUIDE.md](./INSTALLATION_GUIDE.md)** - Installation complète
 
 ---
 
