@@ -1,16 +1,24 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 const gatewayRoutes = require("./routes/gatewayRoutes");
 const rateLimitMiddleware = require("./middlewares/rateLimitMiddleware");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares globaux
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Middlewares de sécurité
+app.use(helmet());
+app.use(
+  cors({
+    origin: process.env.ALLOWED_ORIGINS?.split(",") || "http://localhost:5173",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  })
+);
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 // Logging middleware (optionnel mais utile)
 app.use((req, res, next) => {
@@ -20,9 +28,6 @@ app.use((req, res, next) => {
   );
   next();
 });
-
-// Rate limiting
-app.use("/api", rateLimitMiddleware);
 
 // Health check
 app.get("/health", (req, res) => {
