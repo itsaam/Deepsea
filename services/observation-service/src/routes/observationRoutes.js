@@ -3,6 +3,7 @@ const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
 const observationService = require("../services/observationService");
 const observationController = require("../controllers/observationController");
+const observationCreationLimiter = require("../middlewares/observationRateLimitMiddleware");
 
 /**
  * @swagger
@@ -78,7 +79,12 @@ router.get("/", authMiddleware, async (req, res) => {
  *       401:
  *         description: Non authentifié
  */
-router.post("/", authMiddleware, observationController.createObservation);
+router.post(
+  "/",
+  authMiddleware,
+  observationCreationLimiter,
+  observationController.createObservation
+);
 
 /**
  * @swagger

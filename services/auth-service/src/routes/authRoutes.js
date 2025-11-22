@@ -1,6 +1,10 @@
 const express = require("express");
 const authController = require("../controllers/authController");
 const { authMiddleware } = require("../middlewares/authMiddleware");
+const {
+  loginLimiter,
+  registerLimiter,
+} = require("../middlewares/authRateLimitMiddleware");
 
 const router = express.Router();
 
@@ -35,7 +39,7 @@ const router = express.Router();
  *       400:
  *         description: Données invalides
  */
-router.post("/register", authController.register);
+router.post("/register", registerLimiter, authController.register);
 
 /**
  * @swagger
@@ -78,7 +82,7 @@ router.post("/register", authController.register);
  *       500:
  *         description: Erreur serveur
  */
-router.post("/login", authController.login);
+router.post("/login", loginLimiter, authController.login);
 
 /**
  * @swagger
