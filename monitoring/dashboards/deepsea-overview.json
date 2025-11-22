@@ -1,0 +1,751 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (service_name) (count_over_time({job=\"deepsea\"}[1m]))",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "📊 Logs par Service (5min)",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (service_name) (count_over_time({job=\"deepsea\"}[1m]))",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "📈 Taux de Logs (logs/sec)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "count_over_time({job=\"deepsea\"} |= \"Error\" [30m])",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "❌ Erreurs (5min)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "count_over_time({job=\"deepsea\", service_name=\"api-gateway\"} |= \"GET\" [30m])",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "🌐 Requêtes API Gateway (5min)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "blue",
+                "value": 10
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 8
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "count_over_time({job=\"deepsea\", service_name=\"ai\"} |= \"POST /api/analyze\" [30m])",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "🤖 Analyses IA (5min)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 8
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "count_over_time({job=\"deepsea\", service_name=\"observation\"} |= \"spam détecté\" [30m])",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "🚫 Spam Détecté (5min)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 8
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "count_over_time({job=\"deepsea\", service_name=\"auth\"} |= \"POST /api/auth\" [30m])",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "🔐 Authentifications (5min)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 8
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "count_over_time({job=\"deepsea\"} |= \"status code 404\" [30m])",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "⚠️ 404 Errors (5min)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "id": 9,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "{job=\"deepsea\"} |= \"Error\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "🔴 Logs d'Erreurs",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "id": 10,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "{job=\"deepsea\", service_name=\"ai-service\"} |= \"POST /api/analyze\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "🤖 Logs Analyse IA",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "id": 11,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "{job=\"deepsea\", service_name=\"api-gateway\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "🌐 Logs API Gateway (toutes requêtes)",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (service_name) (count_over_time({job=\"deepsea\"}[1m]))",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "📊 Volume de Logs par Service (par minute)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["deepsea", "microservices", "monitoring"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "🐋 DeepSea Archives - Overview",
+  "uid": "deepsea-overview",
+  "version": 0,
+  "weekStart": ""
+}

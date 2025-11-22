@@ -1,0 +1,57 @@
+version: "3.8"
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  loki-data:
+  grafana-data:
+
+services:
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: promtail
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../logs:/var/log/deepsea:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - monitoring
+    restart: unless-stopped
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: grafana
+    ports:
+      - "3500:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=deepsea2024
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3500
+    networks:
+      - monitoring
+    restart: unless-stopped
+    depends_on:
+      - loki
