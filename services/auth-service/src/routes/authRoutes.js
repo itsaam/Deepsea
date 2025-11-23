@@ -10,6 +10,18 @@ const router = express.Router();
 
 /**
  * @swagger
+ * /auth/users:
+ *   get:
+ *     summary: Récupérer la liste de tous les utilisateurs (pour messagerie)
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Liste des utilisateurs
+ */
+router.get("/users", authController.getAllUsersPublic);
+
+/**
+ * @swagger
  * /auth/users/:userId:
  *   get:
  *     summary: Récupérer les informations publiques d'un utilisateur (id et username uniquement)

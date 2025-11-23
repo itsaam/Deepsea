@@ -340,6 +340,20 @@ async function resetPassword(token, newPassword) {
   return { message: "Mot de passe réinitialisé avec succès" };
 }
 
+async function getAllUsersPublic() {
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      username: true,
+      // email: false - ne pas exposer les emails publiquement
+    },
+    orderBy: {
+      username: "asc",
+    },
+  });
+  return users;
+}
+
 module.exports = {
   register,
   login,
@@ -349,4 +363,5 @@ module.exports = {
   getUserById,
   forgotPassword,
   resetPassword,
+  getAllUsersPublic,
 };
