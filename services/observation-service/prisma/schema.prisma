@@ -183,3 +183,61 @@ enum SanctionType {
   CONTENT_RESTRICTION
   COMMENT_RESTRICTION
 }
+
+// 💬 Messagerie Cryptée E2E
+model UserKeys {
+  id                  Int       @id @default(autoincrement())
+  userId              Int       @unique
+  publicKey           String    // Clé publique pour chiffrement (base64)
+  encryptedPrivateKey String    @db.Text // Clé privée chiffrée avec mot de passe user
+  createdAt           DateTime  @default(now())
+  
+  @@index([userId])
+}
+
+model Conversation {
+  id              Int       @id @default(autoincrement())
+  user1Id         Int       // Premier utilisateur (toujours le plus petit ID)
+  user2Id         Int       // Second utilisateur (toujours le plus grand ID)
+  lastMessageAt   DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  
+  messages        Message[]
+  
+  @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id                  Int       @id @default(autoincrement())
+  conversationId      Int
+  senderId            Int
+  recipientId         Int
+  
+  // Contenu chiffré E2E (serveur ne peut pas le lire)
+  encryptedContent    String    @db.Text
+  
+  // Métadonnées non chiffrées
+  isRead              Boolean   @default(false)
+  deletedBySender     Boolean   @default(false)
+  deletedByRecipient  Boolean   @default(false)
+  
+  // Édition de messages
+  isEdited            Boolean   @default(false)
+  editedAt            DateTime?
+  
+  // Réponses
+  replyToId           Int?      // ID du message auquel on répond
+  
+  createdAt           DateTime  @default(now())
+  
+  conversation        Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([createdAt])
+  @@index([replyToId])
+}
