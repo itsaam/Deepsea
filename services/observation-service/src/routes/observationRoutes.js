@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
+const sanctionMiddleware = require("../middlewares/sanctionMiddleware");
+const { checkActiveWarnings } = require("../middlewares/warningMiddleware");
 const observationService = require("../services/observationService");
 const observationController = require("../controllers/observationController");
 const observationCreationLimiter = require("../middlewares/observationRateLimitMiddleware");
@@ -32,7 +34,7 @@ const observationCreationLimiter = require("../middlewares/observationRateLimitM
  *       401:
  *         description: Non authentifié
  */
-router.get("/", authMiddleware, async (req, res) => {
+router.get("/", authMiddleware, sanctionMiddleware, async (req, res) => {
   try {
     const { status } = req.query;
     const observations = await observationService.getAllObservations(status);
@@ -82,9 +84,46 @@ router.get("/", authMiddleware, async (req, res) => {
 router.post(
   "/",
   authMiddleware,
+  checkActiveWarnings,
   observationCreationLimiter,
   observationController.createObservation
 );
+
+/**
+ * @swagger
+ * /observations/{id}:
+ *   get:
+ *     summary: Récupérer une observation par ID
+ *     tags: [Observations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Observation trouvée
+ *       404:
+ *         description: Observation non trouvée
+ */
+router.get("/:id", authMiddleware, sanctionMiddleware, async (req, res) => {
+  try {
+    const observation = await observationService.getObservationById(
+      parseInt(req.params.id)
+    );
+
+    if (!observation) {
+      return res.status(404).json({ error: "Observation non trouvée" });
+    }
+
+    res.status(200).json(observation);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 /**
  * @swagger

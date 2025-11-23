@@ -7,6 +7,54 @@ const {
 const reputationService = require("./reputationService");
 const { updateSpeciesRarity } = require("../utils/rarityCalculator");
 const notificationService = require("./notificationService");
+const axios = require("axios");
+
+// Fonction helper pour récupérer les infos utilisateur depuis l'auth-service
+const getUserInfo = async (userId) => {
+  try {
+    const response = await axios.get(
+      `http://localhost:3001/api/users/${userId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      `Erreur lors de la récupération de l'utilisateur ${userId}:`,
+      error.message
+    );
+    return null;
+  }
+};
+
+// Fonction pour enrichir les observations avec les usernames
+const enrichObservationsWithUsernames = async (observations) => {
+  const observationsArray = Array.isArray(observations)
+    ? observations
+    : [observations];
+
+  const enriched = await Promise.all(
+    observationsArray.map(async (obs) => {
+      const enrichedObs = { ...obs };
+
+      // Récupérer le username du validateur si présent
+      if (obs.validatedBy) {
+        const validatorInfo = await getUserInfo(obs.validatedBy);
+        if (validatorInfo) {
+          enrichedObs.validatorUsername = validatorInfo.username;
+        }
+      }
+
+      // Récupérer le username de l'auteur
+      const authorInfo = await getUserInfo(obs.authorId);
+      if (authorInfo) {
+        enrichedObs.authorUsername = authorInfo.username;
+      }
+
+      return enrichedObs;
+    })
+  );
+
+  return Array.isArray(observations) ? enriched : enriched[0];
+};
 
 const createObservation = async (
   observationData,
@@ -73,7 +121,8 @@ const getAllObservations = async (status) => {
     },
   });
 
-  return observations;
+  // Enrichir avec les usernames
+  return await enrichObservationsWithUsernames(observations);
 };
 
 const getObservationsBySpecies = async (speciesId) => {
@@ -89,7 +138,8 @@ const getObservationsBySpecies = async (speciesId) => {
     },
   });
 
-  return observations;
+  // Enrichir avec les usernames
+  return await enrichObservationsWithUsernames(observations);
 };
 
 const validateObservation = async (
@@ -141,7 +191,8 @@ const validateObservation = async (
     observationId
   );
 
-  return validatedObservation;
+  // Enrichir avec le username du validateur
+  return await enrichObservationsWithUsernames(validatedObservation);
 };
 
 const rejectObservation = async (
@@ -165,6 +216,11 @@ const rejectObservation = async (
     throw new Error("Cette observation a déjà été traitée");
   }
 
+  // Récupérer le username du validateur
+  const validatorInfo = await getUserInfo(validatorId);
+  const validatorUsername =
+    validatorInfo?.username || `Utilisateur #${validatorId}`;
+
   const rejectedObservation = await prisma.observation.update({
     where: { id: parseInt(observationId) },
     data: {
@@ -180,10 +236,10 @@ const rejectObservation = async (
 
   await reputationService.updateReputation(observation.authorId, -1);
 
-  // 🔔 Créer une notification pour l'auteur avec la raison
+  // 🔔 Créer une notification pour l'auteur avec la raison ET le username du validateur
   const notificationMessage = rejectionReason
-    ? `Votre observation de l'espèce "${rejectedObservation.species.name}" a été rejetée.\n\nRaison: ${rejectionReason}`
-    : `Votre observation de l'espèce "${rejectedObservation.species.name}" a été rejetée.`;
+    ? `Votre observation de l'espèce "${rejectedObservation.species.name}" a été rejetée par ${validatorUsername}.\n\nRaison: ${rejectionReason}`
+    : `Votre observation de l'espèce "${rejectedObservation.species.name}" a été rejetée par ${validatorUsername}.`;
 
   await notificationService.createNotification(
     observation.authorId,
@@ -193,7 +249,8 @@ const rejectObservation = async (
     observationId
   );
 
-  return rejectedObservation;
+  // Enrichir avec le username du validateur
+  return await enrichObservationsWithUsernames(rejectedObservation);
 };
 
 const softDeleteObservation = async (observationId, userId) => {
@@ -260,7 +317,10 @@ const getObservationById = async (observationId) => {
     },
   });
 
-  return observation;
+  if (!observation) return null;
+
+  // Enrichir avec les usernames
+  return await enrichObservationsWithUsernames(observation);
 };
 
 module.exports = {
