@@ -17,11 +17,13 @@ import Casino from "./pages/Casino";
 import SanctionPage from "./pages/SanctionPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SanctionChecker from "./components/SanctionChecker";
+import FloatingChat from "./components/FloatingChat";
 
 function App() {
   return (
     <>
       <SanctionChecker />
+      <FloatingChat />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

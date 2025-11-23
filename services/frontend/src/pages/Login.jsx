@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { generateKeyPair, encryptPrivateKey } from "../utils/crypto";
+import { saveUserKeys, getUserKeys } from "../services/api";
 
 export default function Login() {
   const [identifier, setIdentifier] = useState("");
@@ -18,6 +20,8 @@ export default function Login() {
     setLoading(true);
     try {
       const result = await login(identifier, password, rememberMe);
+
+      // Les clés de chiffrement seront générées automatiquement dans FloatingChat si nécessaire
 
       if (result.requiresTwoFactor) {
         localStorage.setItem("pending2FA", result.userId);

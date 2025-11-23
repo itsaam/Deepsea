@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { generateKeyPair, encryptPrivateKey } from "../utils/crypto";
+import { saveUserKeys } from "../services/api";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -48,9 +50,17 @@ export default function Register() {
     setLoading(true);
     try {
       await register(email, username, password);
+
+      // Les clés de chiffrement seront générées automatiquement lors de la première connexion
       navigate("/login");
     } catch (err) {
-      setError(err.response?.data?.error || "Erreur lors de l'inscription");
+      console.error("Register error:", err);
+      console.error("Response data:", err.response?.data);
+      const errorMsg =
+        err.response?.data?.error ||
+        err.message ||
+        "Erreur lors de l'inscription";
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
