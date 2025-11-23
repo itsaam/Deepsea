@@ -28,43 +28,49 @@ const observationController = {
 
         const speciesName = species.name;
 
-        // 🚀 Si Force Review est activé, skip l'analyse IA complètement
+        // 🚀 Si Force Review est activé, vérifier les limites mais toujours faire l'analyse IA
         let aiAnalysis = null;
+        let forcedReview = false;
 
         if (forceReview) {
-          // Vérifier si l'utilisateur peut utiliser Force Review
-          const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-          const recentUsages = await prisma.forceReviewUsage.count({
-            where: {
-              userId: req.user.id,
-              usedAt: {
-                gte: oneHourAgo,
+          // Admin peut utiliser Force Review sans limite
+          if (req.user.role !== "ADMIN") {
+            // Vérifier si l'utilisateur peut utiliser Force Review
+            const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+            const recentUsages = await prisma.forceReviewUsage.count({
+              where: {
+                userId: req.user.id,
+                usedAt: {
+                  gte: oneHourAgo,
+                },
               },
-            },
-          });
+            });
 
-          if (recentUsages >= 1) {
-            return res.status(429).json({
-              error: "Limite de Force Review atteinte",
-              reason:
-                "Vous avez déjà utilisé le Force Review dans la dernière heure. Veuillez attendre avant de réessayer.",
-              canForceReview: false,
+            if (recentUsages >= 1) {
+              return res.status(429).json({
+                error: "Limite de Force Review atteinte",
+                reason:
+                  "Vous avez déjà utilisé le Force Review dans la dernière heure. Veuillez attendre avant de réessayer.",
+                canForceReview: false,
+              });
+            }
+
+            // Enregistrer l'utilisation du Force Review
+            await prisma.forceReviewUsage.create({
+              data: {
+                userId: req.user.id,
+              },
             });
           }
 
-          // Enregistrer l'utilisation du Force Review
-          await prisma.forceReviewUsage.create({
-            data: {
-              userId: req.user.id,
-            },
-          });
-
+          forcedReview = true;
           console.log(
-            `⚠️ Force Review utilisé - User ID: ${req.user.id}, Username: ${req.user.username} - Skip de l'analyse IA`
+            `⚠️ Force Review utilisé - User ID: ${req.user.id}, Username: ${req.user.username} - L'IA donnera son avis mais ne bloquera pas`
           );
+        }
 
-          // aiAnalysis reste null pour indiquer que l'observation va en revue manuelle
-        } else {
+        // Appel à l'AI service pour analyser l'observation (même en forceReview)
+        if (true) {
           // Appel à l'AI service pour analyser l'observation
           try {
             const aiResponse = await axios.post(
@@ -81,37 +87,53 @@ const observationController = {
             if (aiResponse.data && aiResponse.data.success) {
               aiAnalysis = aiResponse.data.data;
 
-              // Rejet automatique si spam détecté OU qualité trop faible
-              if (aiAnalysis.isSpam || aiAnalysis.qualityScore < 3) {
-                console.log(
-                  `🚫 Observation rejetée : spam/qualité insuffisante - User ID: ${req.user.id}, Username: ${req.user.username}, Score: ${aiAnalysis.qualityScore}/10`
-                );
+              // Si Force Review est activé, on ne rejette PAS même si l'IA détecte un problème
+              if (!forcedReview) {
+                // Rejet automatique si spam détecté OU qualité trop faible
+                if (aiAnalysis.isSpam || aiAnalysis.qualityScore < 3) {
+                  console.log(
+                    `🚫 Observation rejetée : spam/qualité insuffisante - User ID: ${req.user.id}, Username: ${req.user.username}, Score: ${aiAnalysis.qualityScore}/10`
+                  );
 
-                // Retourner l'erreur avec l'option de forcer
-                return res.status(400).json({
-                  error: "Observation rejetée automatiquement",
-                  reason: aiAnalysis.isSpam
-                    ? "Le contenu a été identifié comme spam par notre système d'analyse"
-                    : "La description ne contient pas assez de détails scientifiques",
-                  details: aiAnalysis.reason,
-                  detectedIssues: aiAnalysis.detectedIssues || [],
-                  canForceReview: true,
-                  forceReviewMessage:
-                    "Vous pouvez forcer la création de cette observation pour une revue manuelle (1 fois par heure).",
-                });
+                  // Retourner l'erreur avec l'option de forcer
+                  return res.status(400).json({
+                    error: "Observation rejetée automatiquement",
+                    reason: aiAnalysis.isSpam
+                      ? "Le contenu a été identifié comme spam par notre système d'analyse"
+                      : "La description ne contient pas assez de détails scientifiques",
+                    details: aiAnalysis.reason,
+                    detectedIssues: aiAnalysis.detectedIssues || [],
+                    canForceReview: true,
+                    forceReviewMessage:
+                      "Vous pouvez forcer la création de cette observation pour une revue manuelle (1 fois par heure).",
+                  });
+                }
+              } else {
+                // Force Review activé : on log l'avis de l'IA mais on continue
+                console.log(
+                  `⚠️ Force Review - L'IA suggère ${aiAnalysis.recommendation} (Score: ${aiAnalysis.qualityScore}/10, Spam: ${aiAnalysis.isSpam}) mais l'observation est créée quand même`
+                );
               }
             }
           } catch (aiError) {
-            // L'AI service est down ou ne répond pas - REJET obligatoire
-            console.error(
-              "🚨 Service IA indisponible - Impossible de valider l'observation :",
-              aiError.message
-            );
-            return res.status(503).json({
-              error: "Service de validation temporairement indisponible",
-              reason:
-                "Notre système d'analyse automatique est actuellement hors ligne. Veuillez réessayer dans quelques instants.",
-            });
+            // Si Force Review, on continue même si l'IA est down
+            if (forcedReview) {
+              console.warn(
+                "⚠️ Service IA indisponible mais Force Review activé - création autorisée"
+              );
+              aiAnalysis = null;
+            } else {
+              // L'AI service est down ou ne répond pas - REJET obligatoire
+              console.error(
+                "🚨 Service IA indisponible - Impossible de valider l'observation :",
+                aiError.message
+              );
+              return res.status(503).json({
+                error: "Service de validation temporairement indisponible",
+                reason:
+                  "Notre système d'analyse automatique est actuellement hors ligne. Veuillez réessayer dans quelques instants.",
+              });
+            }
           }
         }
 
