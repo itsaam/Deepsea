@@ -116,3 +116,14 @@ export const getAllUsers = () => API.get("/admin/users");
 export const updateUserRole = (userId, role) =>
   API.patch(`/admin/users/${userId}/role`, { role });
 export const deleteUser = (userId) => API.delete(`/admin/users/${userId}`);
+
+// ✅ MESSAGERIE CRYPTÉE E2E
+export const getConversations = () => API.get("/messages/conversations");
+export const getConversation = (otherUserId) =>
+  API.get(`/messages/conversation/${otherUserId}`);
+export const saveUserKeys = (publicKey, encryptedPrivateKey) =>
+  API.post("/messages/keys", { publicKey, encryptedPrivateKey });
+export const getUserKeys = () => API.get("/messages/keys");
+export const getUserPublicKey = (userId) =>
+  API.get(`/messages/public-key/${userId}`);
+export const getMessagingUsers = () => API.get("/messages/users");
