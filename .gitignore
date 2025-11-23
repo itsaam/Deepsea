@@ -60,6 +60,16 @@ docker-compose.override.yml
 **/copilot-instructions.md
 docs/IMPROVEMENTS_TODO.md
 
+# Rapports et documentation générés (sauf README)
+*_REPORT.md
+*_GUIDE.md
+*_README.md
+ANALYSE_*.md
+RAPPORT_*.md
+CENTRALISATION_*.md
+TESTING_*.md
+FIX_*.md
+
 # Autres fichiers temporaires/éditeurs
 *.swp
 *.swo
