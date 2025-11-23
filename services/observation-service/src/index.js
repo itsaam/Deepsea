@@ -12,6 +12,7 @@ const replyRoutes = require("./routes/replyRoutes");
 const voteRoutes = require("./routes/voteRoutes");
 const reputationRoutes = require("./routes/reputationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const messageRoutes = require("./routes/messageRoutes");
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use("/observations", observationRoutes);
 app.use("/notifications", notificationRoutes);
 app.use("/reputation", reputationRoutes);
 app.use("/admin", adminRoutes);
+app.use("/messages", messageRoutes);
 app.use("/", replyRoutes);
 app.use("/", voteRoutes);
 
@@ -61,7 +63,14 @@ const PORT = process.env.PORT || 3002;
 module.exports = app;
 
 if (require.main === module) {
-  app.listen(PORT, () => {
+  const http = require("http");
+  const { initializeSocketIO } = require("./sockets/messageSocket");
+
+  const server = http.createServer(app);
+  const io = initializeSocketIO(server);
+
+  server.listen(PORT, () => {
     console.log(`🐟 Observation service running on port ${PORT}`);
+    console.log(`💬 WebSocket messaging enabled`);
   });
 }
