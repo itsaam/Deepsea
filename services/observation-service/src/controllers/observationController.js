@@ -73,6 +73,9 @@ const observationController = {
         if (true) {
           // Appel à l'AI service pour analyser l'observation
           try {
+            // Récupérer le token JWT de l'utilisateur depuis le header Authorization
+            const authHeader = req.headers.authorization;
+
             const aiResponse = await axios.post(
               `${AI_SERVICE_URL}/api/analyze`,
               {
@@ -81,6 +84,10 @@ const observationController = {
               },
               {
                 timeout: 30000, // 30 secondes de timeout
+                headers: {
+                  // Transférer le token JWT à l'AI service
+                  ...(authHeader && { Authorization: authHeader }),
+                },
               }
             );
 
