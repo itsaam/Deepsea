@@ -26,10 +26,10 @@ class AIController {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error("Error analyzing observation:", error);
+      console.error("Erreur analyse observation:", error);
       return res.status(500).json({
         success: false,
-        error: "Failed to analyze observation",
+        error: "Échec de l'analyse de l'observation",
         message: error.message,
       });
     }
@@ -56,10 +56,10 @@ class AIController {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error("Error detecting spam:", error);
+      console.error("Erreur détection spam:", error);
       return res.status(500).json({
         success: false,
-        error: "Failed to detect spam",
+        error: "Échec de la détection du spam",
         message: error.message,
       });
     }
@@ -86,10 +86,10 @@ class AIController {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error("Error extracting features:", error);
+      console.error("Erreur extraction caractéristiques:", error);
       return res.status(500).json({
         success: false,
-        error: "Failed to extract features",
+        error: "Échec de l'extraction des caractéristiques",
         message: error.message,
       });
     }
@@ -119,10 +119,10 @@ class AIController {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error("Error suggesting taxonomy:", error);
+      console.error("Erreur suggestion taxonomie:", error);
       return res.status(500).json({
         success: false,
-        error: "Failed to suggest taxonomy",
+        error: "Échec de la suggestion taxonomique",
         message: error.message,
       });
     }
@@ -152,7 +152,7 @@ class AIController {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error("Error comparing observations:", error);
+      console.error("Erreur comparaison observations:", error);
       return res.status(500).json({
         success: false,
         error: "Failed to compare observations",
@@ -182,7 +182,7 @@ class AIController {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error("Error summarizing:", error);
+      console.error("Erreur résumé:", error);
       return res.status(500).json({
         success: false,
         error: "Failed to summarize observation",

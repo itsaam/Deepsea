@@ -26,8 +26,8 @@ class OllamaService {
 
       return response.data.response;
     } catch (error) {
-      console.error("Ollama API Error:", error.message);
-      throw new Error("Failed to generate AI response");
+      console.error("Erreur API Ollama:", error.message);
+      throw new Error("Échec de la génération de la réponse IA");
     }
   }
 
@@ -46,15 +46,15 @@ class OllamaService {
 
       // Protection contre les réponses trop grandes (max 10KB)
       if (cleaned.length > 10000) {
-        console.error("Response too large:", cleaned.length, "bytes");
-        throw new Error("AI response too large to parse");
+        console.error("Réponse trop volumineuse:", cleaned.length, "octets");
+        throw new Error("Réponse IA trop volumineuse pour être traitée");
       }
 
       return JSON.parse(cleaned);
     } catch (error) {
-      console.error("JSON Parse Error:", error.message);
-      console.error("Raw response:", response.substring(0, 200) + "...");
-      throw new Error("Failed to parse AI response as JSON");
+      console.error("Erreur parsing JSON:", error.message);
+      console.error("Réponse brute:", response.substring(0, 200) + "...");
+      throw new Error("Échec du parsing de la réponse IA en JSON");
     }
   }
 

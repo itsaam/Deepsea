@@ -1,4 +1,5 @@
 const ollamaService = require("./ollama.service");
+const { detecterSpam } = require("../../../../shared/utils/detectionSpam");
 
 class AnalysisService {
   /**
@@ -9,27 +10,13 @@ class AnalysisService {
    */
   async analyzeObservation(description, speciesName = "") {
     // 🛡️ DÉTECTION SPAM AVANT ANALYSE BIOLOGIQUE
-    const cleanDesc = description.trim().toLowerCase();
+    const spamCheck = detecterSpam(description, 10);
 
-    // Patterns de spam évidents
-    const spamPatterns = [
-      /^(.)\1{5,}$/, // aaaaaa, zzzzzz
-      /^[a-z]{20,}$/, // azeazeazeazeaze (lettres sans sens)
-      /^(test|lol|mdr|xd)+$/i, // test, lol, mdr
-      /^[0-9]+$/, // que des chiffres
-      /^[^a-z0-9]{10,}$/i, // que des symboles
-      /^(.{2,5})\1{3,}$/, // motifs répétés (azeazeaze)
-    ];
-
-    const isSpamDetected = spamPatterns.some((pattern) =>
-      pattern.test(cleanDesc)
-    );
-
-    if (isSpamDetected || cleanDesc.length < 10) {
+    if (spamCheck.isSpam) {
       return {
         isValid: false,
         confidence: 95,
-        reason: "Contenu invalide : spam, test ou description trop courte",
+        reason: `Contenu invalide : ${spamCheck.raison}`,
         isSpam: true,
         qualityScore: 0,
         recommendation: "REJECT",

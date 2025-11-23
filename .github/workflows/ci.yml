@@ -29,10 +29,14 @@ jobs:
         run: npm ci
 
       - name: ✅ Run tests
-        run: npm test || echo "No tests configured yet"
+        run: npm test
         env:
           JWT_SECRET: test_secret_for_ci
           NODE_ENV: test
+          AUTH_SERVICE_URL: http://localhost:3001
+          OBSERVATION_SERVICE_URL: http://localhost:3002
+          TAXONOMY_SERVICE_URL: http://localhost:5002
+          AI_SERVICE_URL: http://localhost:3003
 
   # Job pour Auth Service
   auth-service:
@@ -174,6 +178,34 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5433/deepsea_taxonomy_test?schema=public
           JWT_SECRET: test_secret_for_ci
           NODE_ENV: test
+
+  # Job pour AI Service
+  ai-service:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./services/ai-service
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: ./services/ai-service/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: ✅ Run tests
+        run: npm test
+        env:
+          JWT_SECRET: test_secret_for_ci
+          NODE_ENV: test
+          OLLAMA_URL: http://localhost:11434
 
   # Job pour le Frontend
   frontend:
