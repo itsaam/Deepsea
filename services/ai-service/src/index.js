@@ -76,21 +76,23 @@ app.use((req, res) => {
   });
 });
 
-// Start server
-app.listen(PORT, async () => {
-  console.log(`🚀 AI Service running on port ${PORT}`);
-  console.log(`📍 Environment: ${process.env.NODE_ENV || "development"}`);
+// Start server (seulement si pas en mode test)
+if (process.env.NODE_ENV !== "test") {
+  app.listen(PORT, async () => {
+    console.log(`🚀 AI Service running on port ${PORT}`);
+    console.log(`📍 Environment: ${process.env.NODE_ENV || "development"}`);
 
-  // Check Ollama connection
-  const ollamaStatus = await ollamaService.healthCheck();
-  if (ollamaStatus) {
-    console.log("✅ Ollama connected successfully");
-  } else {
-    console.warn(
-      "⚠️  Ollama not available - make sure it's running on",
-      process.env.OLLAMA_URL
-    );
-  }
-});
+    // Check Ollama connection
+    const ollamaStatus = await ollamaService.healthCheck();
+    if (ollamaStatus) {
+      console.log("✅ Ollama connected successfully");
+    } else {
+      console.warn(
+        "⚠️  Ollama not available - make sure it's running on",
+        process.env.OLLAMA_URL
+      );
+    }
+  });
+}
 
 module.exports = app;

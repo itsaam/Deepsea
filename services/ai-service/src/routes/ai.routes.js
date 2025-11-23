@@ -1,6 +1,7 @@
 const express = require("express");
 const { body } = require("express-validator");
 const aiController = require("../controllers/ai.controller");
+const jwtMiddleware = require("../middlewares/jwtMiddleware");
 
 const router = express.Router();
 
@@ -40,10 +41,11 @@ const validateTwoDescriptions = [
 /**
  * @route   POST /api/analyze
  * @desc    Analyse complète d'une observation
- * @access  Public (mais devrait être protégé par JWT dans ton archi)
+ * @access  Private (JWT requis)
  */
 router.post(
   "/analyze",
+  jwtMiddleware,
   [...validateDescription, ...validateSpeciesName],
   aiController.analyzeObservation
 );
@@ -51,17 +53,23 @@ router.post(
 /**
  * @route   POST /api/detect-spam
  * @desc    Détecte si une observation est du spam
- * @access  Public
+ * @access  Private (JWT requis)
  */
-router.post("/detect-spam", validateDescription, aiController.detectSpam);
+router.post(
+  "/detect-spam",
+  jwtMiddleware,
+  validateDescription,
+  aiController.detectSpam
+);
 
 /**
  * @route   POST /api/extract-features
  * @desc    Extrait les caractéristiques d'une créature
- * @access  Public
+ * @access  Private (JWT requis)
  */
 router.post(
   "/extract-features",
+  jwtMiddleware,
   validateDescription,
   aiController.extractFeatures
 );
@@ -69,10 +77,11 @@ router.post(
 /**
  * @route   POST /api/suggest-taxonomy
  * @desc    Suggère une classification taxonomique
- * @access  Public
+ * @access  Private (JWT requis)
  */
 router.post(
   "/suggest-taxonomy",
+  jwtMiddleware,
   [...validateDescription, ...validateSpeciesName],
   aiController.suggestTaxonomy
 );
@@ -80,10 +89,11 @@ router.post(
 /**
  * @route   POST /api/compare
  * @desc    Compare deux observations
- * @access  Public
+ * @access  Private (JWT requis)
  */
 router.post(
   "/compare",
+  jwtMiddleware,
   validateTwoDescriptions,
   aiController.compareSimilarity
 );
@@ -91,15 +101,20 @@ router.post(
 /**
  * @route   POST /api/summarize
  * @desc    Résume une observation
- * @access  Public
+ * @access  Private (JWT requis)
  */
-router.post("/summarize", validateDescription, aiController.summarize);
+router.post(
+  "/summarize",
+  jwtMiddleware,
+  validateDescription,
+  aiController.summarize
+);
 
 /**
  * @route   POST /api/chat
  * @desc    Chat avec le bot DeepSea
- * @access  Public
+ * @access  Private (JWT requis)
  */
-router.post("/chat", aiController.chat);
+router.post("/chat", jwtMiddleware, aiController.chat);
 
 module.exports = router;
