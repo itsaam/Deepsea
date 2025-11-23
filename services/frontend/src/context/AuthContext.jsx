@@ -24,19 +24,25 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
-    const token = localStorage.getItem("token");
+    // Vérifier d'abord sessionStorage, puis localStorage
+    let token =
+      sessionStorage.getItem("token") || localStorage.getItem("token");
+
     if (token) {
       try {
         const { data } = await getMe();
         setUser(data);
+        // Marquer la session comme active
+        sessionStorage.setItem("sessionActive", "true");
       } catch (error) {
+        sessionStorage.removeItem("token");
         localStorage.removeItem("token");
       }
     }
     setLoading(false);
   };
 
-  const login = async (identifier, password) => {
+  const login = async (identifier, password, rememberMe = false) => {
     const { data } = await apiLogin({ identifier, password });
 
     // Si A2F est requis, retourner les données sans sauvegarder le token
@@ -45,7 +51,13 @@ export const AuthProvider = ({ children }) => {
     }
 
     // Sinon, connexion normale (au cas où A2F est désactivé)
-    localStorage.setItem("token", data.token);
+    // Stocker selon la préférence rememberMe
+    if (rememberMe) {
+      localStorage.setItem("token", data.token);
+    } else {
+      sessionStorage.setItem("token", data.token);
+    }
+    sessionStorage.setItem("sessionActive", "true");
     setUser(data.user);
     return data;
   };
@@ -56,6 +68,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("sessionActive");
     localStorage.removeItem("token");
     setUser(null);
   };

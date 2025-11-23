@@ -127,6 +127,24 @@ async function resetPassword(req, res) {
   }
 }
 
+async function getUserPublicInfo(req, res) {
+  try {
+    const userId = parseInt(req.params.userId);
+    const user = await authService.getUserById(userId);
+    // Ne retourner que les infos publiques
+    return res.json({
+      id: user.id,
+      username: user.username,
+    });
+  } catch (err) {
+    console.error("Erreur récupération utilisateur:", err);
+    if (err.message === "User not found") {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    return res.status(500).json({ error: "Erreur interne du serveur" });
+  }
+}
+
 module.exports = {
   register,
   login,
@@ -136,4 +154,5 @@ module.exports = {
   getme,
   forgotPassword,
   resetPassword,
+  getUserPublicInfo,
 };

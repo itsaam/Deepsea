@@ -7,12 +7,43 @@ const API = axios.create({
 
 // Intercepteur pour ajouter le token automatiquement
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  // Vérifier sessionStorage en premier, puis localStorage
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+// Intercepteur pour gérer les sanctions
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 403) {
+      const data = error.response.data;
+
+      // Vérifier si c'est une sanction (ban ou suspension)
+      if (
+        data.error === "ACCOUNT_BANNED" ||
+        data.error === "ACCOUNT_SUSPENDED"
+      ) {
+        // Sauvegarder les infos de la sanction
+        localStorage.setItem("sanctionInfo", JSON.stringify(data));
+
+        // Déconnecter l'utilisateur
+        sessionStorage.removeItem("token");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+
+        // Rediriger vers la page de sanction
+        window.location.href = "/sanction";
+        return Promise.reject(error);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Export de l'instance API pour le NotificationContext
 export const api = API;
@@ -52,6 +83,27 @@ export const restoreObservation = (id) =>
   API.patch(`/observations/${id}/restore`);
 export const getObservationAiSuggestion = (id) =>
   API.get(`/observations/${id}/ai-suggestion`);
+
+// ✅ REPLIES (via API Gateway)
+export const getRepliesByObservation = (observationId, page = 1, limit = 20) =>
+  API.get(`/observations/${observationId}/replies`, {
+    params: { page, limit },
+  });
+export const createReply = (observationId, content) =>
+  API.post(`/observations/${observationId}/replies`, { content });
+export const updateReply = (replyId, content) =>
+  API.put(`/replies/${replyId}`, { content });
+export const deleteReply = (replyId) => API.delete(`/replies/${replyId}`);
+
+// ✅ VOTES (via API Gateway)
+export const voteObservation = (observationId, value) =>
+  API.post(`/observations/${observationId}/vote`, { value });
+export const removeVote = (observationId) =>
+  API.delete(`/observations/${observationId}/vote`);
+export const getVoteStats = (observationId) =>
+  API.get(`/observations/${observationId}/vote/stats`);
+export const getTopObservations = (page = 1, limit = 10) =>
+  API.get(`/observations/top`, { params: { page, limit } });
 
 // ✅ REPUTATION (via API Gateway)
 export const getUserReputation = (userId) => API.get(`/reputation/${userId}`);

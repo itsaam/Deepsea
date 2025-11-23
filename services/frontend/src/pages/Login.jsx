@@ -8,6 +8,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -16,10 +17,11 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      const result = await login(identifier, password);
+      const result = await login(identifier, password, rememberMe);
 
       if (result.requiresTwoFactor) {
         localStorage.setItem("pending2FA", result.userId);
+        localStorage.setItem("rememberMe", rememberMe.toString());
         navigate("/verify-2fa");
       } else {
         navigate("/species");
@@ -301,6 +303,8 @@ export default function Login() {
                 <label className="flex items-center gap-2 cursor-pointer group">
                   <input
                     type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
                     className="w-4 h-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
                   />
                   <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">

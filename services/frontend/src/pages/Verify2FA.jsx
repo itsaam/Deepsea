@@ -31,8 +31,18 @@ export default function Verify2FA() {
 
     try {
       const { data } = await verify2FA(userId, code);
-      localStorage.setItem("token", data.token);
-      localStorage.removeItem("pending2FA"); // Nettoyer après succès
+
+      // Stocker le token selon la préférence rememberMe
+      const rememberMe = localStorage.getItem("rememberMe") === "true";
+      if (rememberMe) {
+        localStorage.setItem("token", data.token);
+      } else {
+        sessionStorage.setItem("token", data.token);
+      }
+
+      sessionStorage.setItem("sessionActive", "true");
+      localStorage.removeItem("pending2FA");
+      localStorage.removeItem("rememberMe");
       setUserData(data.user);
 
       // Attendre que React mette à jour le contexte avant de naviguer

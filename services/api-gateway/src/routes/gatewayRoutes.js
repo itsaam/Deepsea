@@ -12,17 +12,49 @@ router.all("/auth/*", rateLimitMiddleware, (req, res) => {
 
 // Routes protégées - JWT requis PUIS rate limit (skip ADMIN)
 
-// Admin routes (Auth Service)
-router.all("/admin/*", jwtMiddleware, rateLimitMiddleware, (req, res) => {
+// Check sanction status (Observation Service)
+router.get("/check-sanction", jwtMiddleware, (req, res) => {
+  proxyRequest(services.OBSERVATION_SERVICE, req, res);
+});
+
+// Admin routes - ORDRE IMPORTANT: routes spécifiques avant génériques
+// Admin statistics (Observation Service)
+router.all(
+  "/admin/users/:userId/statistics",
+  jwtMiddleware,
+  rateLimitMiddleware,
+  (req, res) => {
+    proxyRequest(services.OBSERVATION_SERVICE, req, res);
+  }
+);
+
+// Admin user management (Auth Service)
+router.all("/admin/users*", jwtMiddleware, rateLimitMiddleware, (req, res) => {
   proxyRequest(services.AUTH_SERVICE, req, res);
 });
 
-// Observations routes
+// Admin moderation routes (Observation Service)
+router.all("/admin*", jwtMiddleware, rateLimitMiddleware, (req, res) => {
+  proxyRequest(services.OBSERVATION_SERVICE, req, res);
+});
+
+// Observations routes - GET public, autres méthodes protégées
+router.get("/observations*", rateLimitMiddleware, (req, res) => {
+  proxyRequest(services.OBSERVATION_SERVICE, req, res);
+});
 router.all("/observations*", jwtMiddleware, rateLimitMiddleware, (req, res) => {
   proxyRequest(services.OBSERVATION_SERVICE, req, res);
 });
 
-// Species routes
+// Replies and Votes routes (part of observations service)
+router.all("/replies*", jwtMiddleware, rateLimitMiddleware, (req, res) => {
+  proxyRequest(services.OBSERVATION_SERVICE, req, res);
+});
+
+// Species routes - GET public, autres méthodes protégées
+router.get("/species*", rateLimitMiddleware, (req, res) => {
+  proxyRequest(services.OBSERVATION_SERVICE, req, res);
+});
 router.all("/species*", jwtMiddleware, rateLimitMiddleware, (req, res) => {
   proxyRequest(services.OBSERVATION_SERVICE, req, res);
 });

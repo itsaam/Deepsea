@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { getSpeciesById, createObservation } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
+import VoteButtons from "../components/VoteButtons";
+import ReplySection from "../components/ReplySection";
 
 export default function SpeciesDetail() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [species, setSpecies] = useState(null);
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(true);
@@ -16,6 +20,7 @@ export default function SpeciesDetail() {
   const [canForceReview, setCanForceReview] = useState(false);
   const [forceReviewMessage, setForceReviewMessage] = useState("");
   const [rejectedData, setRejectedData] = useState(null);
+  const [expandedObservation, setExpandedObservation] = useState(null);
 
   // 🔄 Charger le rate limit depuis localStorage au montage
   useEffect(() => {
@@ -267,12 +272,66 @@ export default function SpeciesDetail() {
 
           <div className="space-y-4">
             {species.observations?.map((obs) => (
-              <div key={obs.id} className="border p-4 rounded">
-                <p className="mb-2">{obs.description}</p>
-                <div className="flex justify-between text-sm text-gray-500">
-                  <span>Statut: {obs.status}</span>
-                  <span>{new Date(obs.createdAt).toLocaleDateString()}</span>
+              <div key={obs.id} className="border p-4 rounded bg-gray-50">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1">
+                    <p className="mb-2 text-gray-800">{obs.description}</p>
+                    <div className="flex gap-4 text-sm text-gray-500">
+                      <span
+                        className={`px-2 py-1 rounded ${
+                          obs.status === "PENDING"
+                            ? "bg-yellow-200 text-yellow-800"
+                            : obs.status === "VALIDATED"
+                            ? "bg-green-200 text-green-800"
+                            : "bg-red-200 text-red-800"
+                        }`}
+                      >
+                        {obs.status}
+                      </span>
+                      <span>
+                        {new Date(obs.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Vote Buttons - Only for validated observations */}
+                  {obs.status === "VALIDATED" && !obs.deleted && (
+                    <VoteButtons
+                      observationId={obs.id}
+                      authorId={obs.authorId}
+                      currentUserId={user?.id}
+                    />
+                  )}
                 </div>
+
+                {/* Toggle Comments Button - Only for validated observations */}
+                {obs.status === "VALIDATED" && !obs.deleted && (
+                  <>
+                    <button
+                      onClick={() =>
+                        setExpandedObservation(
+                          expandedObservation === obs.id ? null : obs.id
+                        )
+                      }
+                      className="mt-2 text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-2 text-sm"
+                    >
+                      {expandedObservation === obs.id ? "🔽" : "▶️"}
+                      {expandedObservation === obs.id ? "Masquer" : "Voir"} les
+                      commentaires
+                    </button>
+
+                    {/* Reply Section - Expandable */}
+                    {expandedObservation === obs.id && (
+                      <div className="mt-4">
+                        <ReplySection
+                          observationId={obs.id}
+                          currentUserId={user?.id}
+                          currentUserRole={user?.role}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             ))}
           </div>

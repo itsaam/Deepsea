@@ -9,12 +9,15 @@ import {
 } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
+import VoteButtons from "../components/VoteButtons";
+import ReplySection from "../components/ReplySection";
 
 export default function ObservationsList() {
   const [observations, setObservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [aiSuggestions, setAiSuggestions] = useState({});
+  const [expandedObservation, setExpandedObservation] = useState(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -128,21 +131,31 @@ export default function ObservationsList() {
             {filteredObs.map((obs) => (
               <div key={obs.id} className="bg-white p-6 rounded-lg shadow">
                 <div className="flex justify-between items-start mb-4">
-                  <div>
+                  <div className="flex-1">
                     <h3 className="text-xl font-bold">{obs.species?.name}</h3>
                     <p className="text-gray-600 mt-2">{obs.description}</p>
                   </div>
-                  <span
-                    className={`px-3 py-1 rounded text-sm ${
-                      obs.status === "PENDING"
-                        ? "bg-yellow-200"
-                        : obs.status === "VALIDATED"
-                        ? "bg-green-200"
-                        : "bg-red-200"
-                    }`}
-                  >
-                    {obs.status}
-                  </span>
+                  <div className="flex flex-col items-end gap-2">
+                    <span
+                      className={`px-3 py-1 rounded text-sm ${
+                        obs.status === "PENDING"
+                          ? "bg-yellow-200"
+                          : obs.status === "VALIDATED"
+                          ? "bg-green-200"
+                          : "bg-red-200"
+                      }`}
+                    >
+                      {obs.status}
+                    </span>
+                    {/* Vote Buttons - Only for validated observations */}
+                    {obs.status === "VALIDATED" && !obs.deleted && (
+                      <VoteButtons
+                        observationId={obs.id}
+                        authorId={obs.authorId}
+                        currentUserId={user?.id}
+                      />
+                    )}
+                  </div>
                 </div>
 
                 {/* 📋 Raison du rejet */}
@@ -152,18 +165,24 @@ export default function ObservationsList() {
                       Raison du rejet :
                     </p>
                     <p className="text-red-700">{obs.rejectionReason}</p>
-                    {obs.validatedBy && (
+                    {obs.validatorUsername && (
                       <p className="text-sm text-red-600 mt-1">
-                        Rejeté par l'utilisateur ID: {obs.validatedBy}
+                        Rejeté par :{" "}
+                        <span className="font-semibold">
+                          {obs.validatorUsername}
+                        </span>
                       </p>
                     )}
                   </div>
                 )}
 
                 {/* ✅ Info validation */}
-                {obs.status === "VALIDATED" && obs.validatedBy && (
+                {obs.status === "VALIDATED" && obs.validatorUsername && (
                   <div className="mb-4 text-sm text-gray-600">
-                    Validé par l'utilisateur ID: {obs.validatedBy}
+                    Validé par :{" "}
+                    <span className="font-semibold">
+                      {obs.validatorUsername}
+                    </span>
                   </div>
                 )}
 
@@ -220,22 +239,25 @@ export default function ObservationsList() {
                   </div>
                 )}
 
-                {obs.status === "PENDING" && obs.authorId !== user?.id && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleValidate(obs.id)}
-                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                    >
-                      Valider
-                    </button>
-                    <button
-                      onClick={() => handleReject(obs.id)}
-                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                    >
-                      Rejeter
-                    </button>
-                  </div>
-                )}
+                {/* Only EXPERT and ADMIN can validate/reject */}
+                {obs.status === "PENDING" &&
+                  obs.authorId !== user?.id &&
+                  (user?.role === "EXPERT" || user?.role === "ADMIN") && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleValidate(obs.id)}
+                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                      >
+                        Valider
+                      </button>
+                      <button
+                        onClick={() => handleReject(obs.id)}
+                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                      >
+                        Rejeter
+                      </button>
+                    </div>
+                  )}
 
                 {/* Delete button for EXPERT/ADMIN on validated/rejected observations only */}
                 {(user?.role === "EXPERT" || user?.role === "ADMIN") &&
@@ -267,6 +289,33 @@ export default function ObservationsList() {
                       ` le ${new Date(obs.deletedAt).toLocaleDateString()}`}
                   </p>
                 )}
+
+                {/* Toggle Comments Button - Only for validated observations */}
+                {obs.status === "VALIDATED" && !obs.deleted && (
+                  <button
+                    onClick={() =>
+                      setExpandedObservation(
+                        expandedObservation === obs.id ? null : obs.id
+                      )
+                    }
+                    className="mt-4 text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-2"
+                  >
+                    {expandedObservation === obs.id ? "🔽" : "▶️"}
+                    {expandedObservation === obs.id ? "Masquer" : "Voir"} les
+                    commentaires
+                  </button>
+                )}
+
+                {/* Reply Section - Expandable */}
+                {expandedObservation === obs.id &&
+                  obs.status === "VALIDATED" &&
+                  !obs.deleted && (
+                    <ReplySection
+                      observationId={obs.id}
+                      currentUserId={user?.id}
+                      currentUserRole={user?.role}
+                    />
+                  )}
               </div>
             ))}
           </div>

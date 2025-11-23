@@ -10,6 +10,26 @@ const router = express.Router();
 
 /**
  * @swagger
+ * /auth/users/:userId:
+ *   get:
+ *     summary: Récupérer les informations publiques d'un utilisateur (id et username uniquement)
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Informations utilisateur
+ *       404:
+ *         description: Utilisateur non trouvé
+ */
+router.get("/users/:userId", authController.getUserPublicInfo);
+
+/**
+ * @swagger
  * /auth/register:
  *   post:
  *     summary: Créer un nouveau compte utilisateur

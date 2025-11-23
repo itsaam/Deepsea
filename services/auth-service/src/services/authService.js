@@ -53,6 +53,14 @@ async function register({ email, username, password, role }) {
     throw new Error("Email already in use");
   }
 
+  const existingUsername = await prisma.user.findUnique({
+    where: { username },
+  });
+
+  if (existingUsername) {
+    throw new Error("Username already in use");
+  }
+
   const passwordHash = await hashPassword(password);
 
   const user = await prisma.user.create({
