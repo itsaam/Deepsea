@@ -1,18 +1,68 @@
-node_modules/
+# Node / JS
+**/node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log
+
+# Environnements / secrets (NE PAS committer)
+**/.env
+**/.env.*
 .env
-.idea
-.pids
-.DS_Store
+.env.local
+.env.*.local
 
-# Logs
+# Builds / caches
+**/dist/
+**/build/
+**/.cache/
+**/.parcel-cache/
+**/.next/
+**/.vite/
+**/out/
+coverage/
+coverage/**
+
+# Logs / pid / tmp
+logs/
 logs/*.log
+*.log
+*.pid
+.pids
+tmp/
+temp/
+*.tmp
 
-# Test scripts
+# Migrations SQL (générique)
+**/migrations/**/*.sql
+**/migrations/**/migration.sql
+
+# IDE / OS
+**/.idea/
+**/.vscode/
+.DS_Store
+Thumbs.db
+
+# Tests / scripts générés
 test-*.sh
 check-*.js
 reset-*.js
 
-# Migrations SQL
-**/migrations/**/*.sql
-**/migrations/**/migration.sql
+# Clés / certificats
+*.pem
+*.key
+*.crt
+
+# Docker / containers
+docker-compose.override.yml
+**/docker-compose.override.yml
+
+# Docs / fichiers d'instructions privés
+**/copilot-instructions.md
 docs/IMPROVEMENTS_TODO.md
+
+# Autres fichiers temporaires/éditeurs
+*.swp
+*.swo
+*.log.*
+.github/copilot-instructions-universal.md
+ENCRYPTED_MESSAGING_IMPLEMENTATION.md

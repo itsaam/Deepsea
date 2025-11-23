@@ -145,6 +145,16 @@ async function getUserPublicInfo(req, res) {
   }
 }
 
+async function getAllUsersPublic(req, res) {
+  try {
+    const users = await authService.getAllUsersPublic();
+    return res.json(users);
+  } catch (err) {
+    console.error("Erreur récupération utilisateurs:", err);
+    return res.status(500).json({ error: "Erreur interne du serveur" });
+  }
+}
+
 module.exports = {
   register,
   login,
@@ -155,4 +165,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   getUserPublicInfo,
+  getAllUsersPublic,
 };

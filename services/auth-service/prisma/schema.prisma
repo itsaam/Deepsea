@@ -14,6 +14,7 @@ model User {
   password  String
   role      Role     @default(USER)
   reputation Int      @default(0)
+  isBot     Boolean  @default(false)
   twoFactorCode String?
   twoFactorExpires DateTime?
   resetPasswordToken String?

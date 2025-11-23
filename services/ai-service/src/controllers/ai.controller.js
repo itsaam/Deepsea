@@ -1,5 +1,5 @@
-const analysisService = require('../services/analysis.service');
-const { validationResult } = require('express-validator');
+const analysisService = require("../services/analysis.service");
+const { validationResult } = require("express-validator");
 
 class AIController {
   /**
@@ -15,19 +15,22 @@ class AIController {
 
       const { description, speciesName } = req.body;
 
-      const analysis = await analysisService.analyzeObservation(description, speciesName);
+      const analysis = await analysisService.analyzeObservation(
+        description,
+        speciesName
+      );
 
       return res.status(200).json({
         success: true,
         data: analysis,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Error analyzing observation:', error);
+      console.error("Error analyzing observation:", error);
       return res.status(500).json({
         success: false,
-        error: 'Failed to analyze observation',
-        message: error.message
+        error: "Failed to analyze observation",
+        message: error.message,
       });
     }
   }
@@ -50,14 +53,14 @@ class AIController {
       return res.status(200).json({
         success: true,
         data: result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Error detecting spam:', error);
+      console.error("Error detecting spam:", error);
       return res.status(500).json({
         success: false,
-        error: 'Failed to detect spam',
-        message: error.message
+        error: "Failed to detect spam",
+        message: error.message,
       });
     }
   }
@@ -80,14 +83,14 @@ class AIController {
       return res.status(200).json({
         success: true,
         data: features,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Error extracting features:', error);
+      console.error("Error extracting features:", error);
       return res.status(500).json({
         success: false,
-        error: 'Failed to extract features',
-        message: error.message
+        error: "Failed to extract features",
+        message: error.message,
       });
     }
   }
@@ -105,19 +108,22 @@ class AIController {
 
       const { description, speciesName } = req.body;
 
-      const taxonomy = await analysisService.suggestTaxonomy(description, speciesName);
+      const taxonomy = await analysisService.suggestTaxonomy(
+        description,
+        speciesName
+      );
 
       return res.status(200).json({
         success: true,
         data: taxonomy,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Error suggesting taxonomy:', error);
+      console.error("Error suggesting taxonomy:", error);
       return res.status(500).json({
         success: false,
-        error: 'Failed to suggest taxonomy',
-        message: error.message
+        error: "Failed to suggest taxonomy",
+        message: error.message,
       });
     }
   }
@@ -135,19 +141,22 @@ class AIController {
 
       const { description1, description2 } = req.body;
 
-      const comparison = await analysisService.compareSimilarity(description1, description2);
+      const comparison = await analysisService.compareSimilarity(
+        description1,
+        description2
+      );
 
       return res.status(200).json({
         success: true,
         data: comparison,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Error comparing observations:', error);
+      console.error("Error comparing observations:", error);
       return res.status(500).json({
         success: false,
-        error: 'Failed to compare observations',
-        message: error.message
+        error: "Failed to compare observations",
+        message: error.message,
       });
     }
   }
@@ -170,14 +179,46 @@ class AIController {
       return res.status(200).json({
         success: true,
         data: { summary },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Error summarizing:', error);
+      console.error("Error summarizing:", error);
       return res.status(500).json({
         success: false,
-        error: 'Failed to summarize observation',
-        message: error.message
+        error: "Failed to summarize observation",
+        message: error.message,
+      });
+    }
+  }
+
+  /**
+   * POST /api/chat
+   * Chat avec le bot DeepSea
+   */
+  async chat(req, res) {
+    try {
+      const { message, systemPrompt } = req.body;
+
+      if (!message || message.trim().length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: "Message est requis",
+        });
+      }
+
+      const response = await analysisService.chat(message, systemPrompt);
+
+      return res.status(200).json({
+        success: true,
+        data: { response },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Erreur chat:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Échec du chat",
+        message: error.message,
       });
     }
   }

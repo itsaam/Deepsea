@@ -99,4 +99,9 @@ router.all("/genus*", jwtMiddleware, rateLimitMiddleware, (req, res) => {
   proxyRequest(services.TAXONOMY_SERVICE, req, res);
 });
 
+// Messaging routes (Observation Service) - all protected
+router.all("/messages*", jwtMiddleware, rateLimitMiddleware, (req, res) => {
+  proxyRequest(services.OBSERVATION_SERVICE, req, res);
+});
+
 module.exports = router;

@@ -206,6 +206,82 @@ Réponds UNIQUEMENT avec le résumé en texte brut (pas de JSON).`;
 
     return await ollamaService.generate(prompt, { temperature: 0.5 });
   }
+
+  /**
+   * Chat avec le bot DeepSea
+   * @param {string} message - Message de l'utilisateur
+   * @param {string} systemPrompt - Prompt système optionnel
+   * @returns {Promise<string>}
+   */
+  async chat(message, systemPrompt = null) {
+    // 🛡️ FILTRAGE PRÉ-IA : Détecter les questions hors-sujet AVANT de demander à l'IA
+    const lowerMessage = message.toLowerCase().trim();
+
+    const offTopicKeywords = [
+      "recette",
+      "pizza",
+      "cuisine",
+      "cuisinier",
+      "plat",
+      "restaurant",
+      "manger",
+      "nourriture",
+      "politique",
+      "président",
+      "élection",
+      "gouvernement",
+      "ministre",
+      "football",
+      "match",
+      "sport",
+      "équipe",
+      "joueur",
+      "film",
+      "série",
+      "acteur",
+      "célébrité",
+      "musique",
+      "chanson",
+      "santé",
+      "médicament",
+      "maladie",
+      "médecin",
+      "hôpital",
+      "argent",
+      "crypto",
+      "bitcoin",
+      "bourse",
+      "investir",
+      "hack",
+      "scam",
+      "phishing",
+      "mot de passe",
+    ];
+
+    const isOffTopic = offTopicKeywords.some((keyword) =>
+      lowerMessage.includes(keyword)
+    );
+
+    if (isOffTopic) {
+      return "🌊 Je suis spécialisé en biologie marine ! Pose-moi une question sur les océans, les espèces marines ou la plateforme DeepSea.";
+    }
+
+    // ✅ Question acceptée, on demande à l'IA
+    const defaultPrompt = `Tu es un bot expert en biologie marine. Réponds en MAXIMUM 2 phrases courtes. Commence par un emoji marin.`;
+
+    const finalPrompt = systemPrompt || defaultPrompt;
+
+    const fullPrompt = `${finalPrompt}
+
+${message}
+
+Réponse (2 phrases max) :`;
+
+    return await ollamaService.generate(fullPrompt, {
+      temperature: 0.4,
+      max_tokens: 80,
+    });
+  }
 }
 
 module.exports = new AnalysisService();
