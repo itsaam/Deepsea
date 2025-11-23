@@ -15,3 +15,4 @@ reset-*.js
 # Migrations SQL
 **/migrations/**/*.sql
 **/migrations/**/migration.sql
+docs/IMPROVEMENTS_TODO.md
