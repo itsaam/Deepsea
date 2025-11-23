@@ -1,0 +1,38 @@
+{
+  "name": "@deepsea/shared-utils",
+  "version": "1.0.0",
+  "description": "Utilitaires partagés entre les microservices DeepSea",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --detectOpenHandles --forceExit",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage --collectCoverageFrom='*.js' --collectCoverageFrom='!tests/**'"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/tests/"
+    ],
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
+  },
+  "keywords": [
+    "deepsea",
+    "utils",
+    "spam",
+    "validation",
+    "auth",
+    "errors"
+  ],
+  "author": "DeepSea Team",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "bcrypt": "^5.1.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
