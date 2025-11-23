@@ -2,9 +2,12 @@ const express = require("express");
 const router = express.Router();
 const notificationController = require("../controllers/notificationController");
 const authMiddleware = require("../middlewares/authMiddleware");
+const { checkActiveWarnings } = require("../middlewares/warningMiddleware");
 
 // Toutes les routes nécessitent l'authentification
 router.use(authMiddleware);
+// Vérifier les warnings actifs (bloque si ban CRITICAL)
+router.use(checkActiveWarnings);
 
 // GET /api/notifications - Récupérer mes notifications
 router.get("/", notificationController.getMyNotifications);

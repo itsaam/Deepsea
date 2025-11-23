@@ -8,6 +8,10 @@ require("dotenv").config();
 const speciesRoutes = require("./routes/speciesRoutes");
 const observationRoutes = require("./routes/observationRoutes");
 const notificationRoutes = require("./routes/notification.routes");
+const replyRoutes = require("./routes/replyRoutes");
+const voteRoutes = require("./routes/voteRoutes");
+const reputationRoutes = require("./routes/reputationRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
@@ -26,10 +30,21 @@ app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 // Swagger documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+// Check sanction status route
+const authMiddleware = require("./middlewares/authMiddleware");
+const sanctionMiddleware = require("./middlewares/sanctionMiddleware");
+app.get("/check-sanction", authMiddleware, sanctionMiddleware, (req, res) => {
+  res.json({ status: "ok", message: "No active sanctions" });
+});
+
 // Routes
 app.use("/species", speciesRoutes);
 app.use("/observations", observationRoutes);
 app.use("/notifications", notificationRoutes);
+app.use("/reputation", reputationRoutes);
+app.use("/admin", adminRoutes);
+app.use("/", replyRoutes);
+app.use("/", voteRoutes);
 
 // Route de base
 app.get("/", (req, res) => {

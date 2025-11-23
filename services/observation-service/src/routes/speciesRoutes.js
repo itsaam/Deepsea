@@ -3,6 +3,10 @@ const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
 const requireRole = require("../middlewares/roleMiddleware");
 const speciesService = require("../services/speciesService");
+const {
+  checkContentRestriction,
+} = require("../middlewares/restrictionMiddleware");
+const { checkActiveWarnings } = require("../middlewares/warningMiddleware");
 
 /**
  * @swagger
@@ -68,17 +72,23 @@ router.get("/", async (req, res) => {
  *       401:
  *         description: Non authentifié
  */
-router.post("/", authMiddleware, async (req, res) => {
-  try {
-    const newSpecies = await speciesService.createSpecies(
-      req.body,
-      req.user.id
-    );
-    res.status(201).json(newSpecies);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+router.post(
+  "/",
+  authMiddleware,
+  checkActiveWarnings,
+  checkContentRestriction,
+  async (req, res) => {
+    try {
+      const newSpecies = await speciesService.createSpecies(
+        req.body,
+        req.user.id
+      );
+      res.status(201).json(newSpecies);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
   }
-});
+);
 
 /**
  * @swagger
