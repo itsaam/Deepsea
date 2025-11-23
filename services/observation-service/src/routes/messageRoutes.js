@@ -14,7 +14,7 @@ router.get("/conversations", authMiddleware, async (req, res) => {
     );
     res.json(conversations);
   } catch (error) {
-    console.error("Failed to get conversations:", error.message);
+    console.error("Échec récupération conversations:", error.message);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -40,7 +40,7 @@ router.get("/conversation/:otherUserId", authMiddleware, async (req, res) => {
 
     res.json(conversation);
   } catch (error) {
-    console.error("Failed to get conversation:", error.message);
+    console.error("Échec récupération conversation:", error.message);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -65,7 +65,7 @@ router.post("/keys", authMiddleware, async (req, res) => {
 
     res.json({ success: true });
   } catch (error) {
-    console.error("Failed to save keys:", error.message);
+    console.error("Échec sauvegarde clés:", error.message);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -84,7 +84,7 @@ router.get("/keys", authMiddleware, async (req, res) => {
 
     res.json(keys);
   } catch (error) {
-    console.error("Failed to get keys:", error.message);
+    console.error("Échec récupération clés:", error.message);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -104,7 +104,7 @@ router.get("/public-key/:userId", authMiddleware, async (req, res) => {
 
     res.json({ publicKey });
   } catch (error) {
-    console.error("Failed to get public key:", error.message);
+    console.error("Échec récupération clé publique:", error.message);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -118,7 +118,7 @@ router.get("/users", authMiddleware, async (req, res) => {
     const users = await messageService.getAllUsers(req.user.id);
     res.json(users);
   } catch (error) {
-    console.error("Failed to get users:", error.message);
+    console.error("Échec récupération utilisateurs:", error.message);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -134,7 +134,7 @@ router.delete("/:messageId", authMiddleware, async (req, res) => {
 
     res.json({ success: true });
   } catch (error) {
-    console.error("Failed to delete message:", error.message);
+    console.error("Échec suppression message:", error.message);
     res.status(500).json({ error: error.message });
   }
 });

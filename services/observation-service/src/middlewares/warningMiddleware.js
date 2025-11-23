@@ -1,23 +1,9 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const notificationService = require("../services/notificationService");
-const axios = require("axios");
-
-const AUTH_SERVICE_URL =
-  process.env.AUTH_SERVICE_URL || "http://localhost:3001";
-
-// Helper pour récupérer les infos utilisateur
-async function getUserInfo(userId) {
-  try {
-    const response = await axios.get(
-      `${AUTH_SERVICE_URL}/internal/user/${userId}`
-    );
-    return response.data;
-  } catch (error) {
-    console.error(`Erreur récupération user ${userId}:`, error.message);
-    return null;
-  }
-}
+const {
+  recupererInfosUtilisateur: getUserInfo,
+} = require("../../../../shared/utils/authServiceClient");
 
 /**
  * Middleware pour vérifier les warnings actifs et appliquer des restrictions automatiques

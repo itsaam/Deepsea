@@ -1,51 +1,10 @@
 const { PrismaClient } = require("@prisma/client");
 const notificationService = require("../services/notificationService");
-const axios = require("axios");
+const {
+  recupererInfosUtilisateur: getUserInfo,
+  viderCacheUtilisateur,
+} = require("../../../../shared/utils/authServiceClient");
 const prisma = new PrismaClient();
-
-const AUTH_SERVICE_URL =
-  process.env.AUTH_SERVICE_URL || "http://localhost:3001";
-
-// 🚀 Cache en mémoire pour getUserInfo (éviter des centaines d'appels identiques)
-const userCache = new Map();
-const USER_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-// Helper pour récupérer les infos utilisateur avec cache
-async function getUserInfo(userId) {
-  try {
-    // Vérifier le cache
-    const cached = userCache.get(userId);
-    if (cached && Date.now() - cached.timestamp < USER_CACHE_TTL) {
-      return cached.data;
-    }
-
-    // Si pas en cache ou expiré, fetch depuis auth service
-    const response = await axios.get(
-      `${AUTH_SERVICE_URL}/internal/user/${userId}`
-    );
-
-    // Mettre en cache
-    userCache.set(userId, {
-      data: response.data,
-      timestamp: Date.now(),
-    });
-
-    return response.data;
-  } catch (error) {
-    // Si l'user est en cache même expiré, on le retourne quand même
-    const cached = userCache.get(userId);
-    if (cached) {
-      return cached.data;
-    }
-
-    return null;
-  }
-}
-
-// Fonction pour invalider le cache d'un utilisateur (utile après update)
-function invalidateUserCache(userId) {
-  userCache.delete(userId);
-}
 
 const adminController = {
   // 📊 Dashboard - Statistiques globales

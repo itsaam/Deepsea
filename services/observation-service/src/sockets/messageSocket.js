@@ -24,7 +24,7 @@ function initializeSocketIO(server) {
 
       next();
     } catch (error) {
-      console.error("Socket authentication failed:", error.message);
+      console.error("Échec authentification socket:", error.message);
       next(new Error("Authentication error"));
     }
   });
@@ -112,7 +112,7 @@ function initializeSocketIO(server) {
 
         socket.emit("marked_read", { conversationId });
       } catch (error) {
-        console.error("Failed to mark as read:", error.message);
+        console.error("Échec marquage comme lu:", error.message);
       }
     });
 

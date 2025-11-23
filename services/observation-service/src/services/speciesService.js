@@ -3,7 +3,6 @@ const {
   validateSpeciesData,
   isSpeciesNameUnique,
 } = require("../utils/validators");
-const { getAsciiArtByName } = require("../utils/asciiArt");
 const axios = require("axios");
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:3003";
@@ -55,13 +54,7 @@ const createSpecies = async (speciesData, authorId) => {
     },
   });
 
-  // Ajouter l'ASCII art
-  const asciiArt = getAsciiArtByName(speciesData.name);
-  return {
-    ...newSpecies,
-    asciiArt: asciiArt.art,
-    asciiName: asciiArt.name,
-  };
+  return newSpecies;
 };
 
 const getSpeciesById = async (speciesId) => {

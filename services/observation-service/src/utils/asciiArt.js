@@ -300,16 +300,8 @@ const getAsciiArtByName = (speciesName) => {
   return getRandomAsciiArt();
 };
 
-/**
- * Retourne tous les ASCII arts disponibles
- */
-const getAllAsciiArts = () => {
-  return marineCreatures;
-};
-
 module.exports = {
   getRandomAsciiArt,
   getAsciiArtByName,
-  getAllAsciiArts,
   marineCreatures,
 };

@@ -7,23 +7,9 @@ const {
 const reputationService = require("./reputationService");
 const { updateSpeciesRarity } = require("../utils/rarityCalculator");
 const notificationService = require("./notificationService");
-const axios = require("axios");
-
-// Fonction helper pour récupérer les infos utilisateur depuis l'auth-service
-const getUserInfo = async (userId) => {
-  try {
-    const response = await axios.get(
-      `http://localhost:3001/api/users/${userId}`
-    );
-    return response.data;
-  } catch (error) {
-    console.error(
-      `Erreur lors de la récupération de l'utilisateur ${userId}:`,
-      error.message
-    );
-    return null;
-  }
-};
+const {
+  recupererInfosUtilisateur: getUserInfo,
+} = require("../../../../shared/utils/authServiceClient");
 
 // Fonction pour enrichir les observations avec les usernames
 const enrichObservationsWithUsernames = async (observations) => {

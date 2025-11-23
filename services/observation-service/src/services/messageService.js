@@ -251,7 +251,10 @@ class MessageService {
       console.log("✅ Filtered users:", filtered);
       return filtered;
     } catch (error) {
-      console.error("Failed to fetch users from auth-service:", error.message);
+      console.error(
+        "Échec récupération utilisateurs depuis auth-service:",
+        error.message
+      );
       return [];
     }
   }

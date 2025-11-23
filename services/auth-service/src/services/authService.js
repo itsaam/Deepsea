@@ -1,5 +1,8 @@
 const prisma = require("../../prismaClient");
-const { hashPassword, comparePassword } = require("../utils/hashUtils");
+const {
+  hashPassword,
+  comparePassword,
+} = require("../../../../shared/utils/hashUtils");
 const { signToken } = require("../config/jwt");
 
 /**
