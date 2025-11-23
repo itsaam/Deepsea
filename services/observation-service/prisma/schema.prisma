@@ -35,6 +35,40 @@ model Observation {
   createdAt       DateTime  @default(now())
   
   species         Species   @relation(fields: [speciesId], references: [id])
+  replies         Reply[]
+  votes           Vote[]
+}
+
+model Reply {
+  id              Int       @id @default(autoincrement())
+  observationId   Int
+  authorId        Int
+  content         String
+  deleted         Boolean   @default(false)
+  deletedBy       Int?
+  deletedAt       DateTime?
+  deletionReason  String?   // Raison de la suppression
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  observation     Observation @relation(fields: [observationId], references: [id], onDelete: Cascade)
+  
+  @@index([observationId])
+  @@index([authorId])
+}
+
+model Vote {
+  id              Int       @id @default(autoincrement())
+  observationId   Int
+  userId          Int
+  value           Int       // 1 pour upvote, -1 pour downvote
+  createdAt       DateTime  @default(now())
+  
+  observation     Observation @relation(fields: [observationId], references: [id], onDelete: Cascade)
+  
+  @@unique([observationId, userId]) // Un user ne peut voter qu'une fois par observation
+  @@index([observationId])
+  @@index([userId])
 }
 
 model UserReputation { 
@@ -75,4 +109,77 @@ enum NotificationType {
   OBSERVATION_REJECTED
   REPUTATION_UPDATE
   PROMOTION_EXPERT
+  NEW_COMMENT
+  COMMENT_DELETED
+  WARNING_RECEIVED
+  ACCOUNT_SUSPENDED
+  ACCOUNT_BANNED
+}
+
+model Warning {
+  id          Int      @id @default(autoincrement())
+  userId      Int      // Utilisateur qui reçoit l'avertissement
+  issuedBy    Int      // Admin qui a émis l'avertissement
+  reason      String
+  severity    WarningSeverity @default(LOW)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime? // Optionnel, pour warnings temporaires
+  
+  // Champs de révocation pour traçabilité
+  revokedBy   Int?     // Admin qui a révoqué
+  revokedAt   DateTime?
+  revokeReason String? // Raison de la révocation
+  
+  @@index([userId])
+  @@index([issuedBy])
+}
+
+model UserSanction {
+  id          Int      @id @default(autoincrement())
+  userId      Int      // Utilisateur sanctionné
+  type        SanctionType
+  reason      String
+  issuedBy    Int      // Admin qui a émis la sanction
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime? // Date de fin pour suspensions temporaires
+  
+  // Champs de révocation pour traçabilité
+  revokedBy   Int?     // Admin qui a révoqué
+  revokedAt   DateTime?
+  revokeReason String? // Raison de la révocation
+  
+  @@index([userId])
+  @@index([issuedBy])
+}
+
+model ActivityLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int?     // Peut être null pour actions système
+  action      String   // Type d'action (CREATE_OBSERVATION, DELETE_COMMENT, etc.)
+  targetType  String?  // Type de cible (Observation, Reply, User, etc.)
+  targetId    Int?     // ID de la cible
+  metadata    Json?    // Données additionnelles
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+enum WarningSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SanctionType {
+  TEMPORARY_SUSPENSION
+  PERMANENT_BAN
+  CONTENT_RESTRICTION
+  COMMENT_RESTRICTION
 }
